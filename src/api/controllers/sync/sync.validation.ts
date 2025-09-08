@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { OrderItemBodyDto } from "../../../types/dtos";
+import { OrderItemBodyDto } from '../../../types/dtos';
 
 export const customerSchema = Joi.object({
   id: Joi.number().optional(),
@@ -46,7 +46,9 @@ export const orderSchema = Joi.object({
 
   if (order.amount !== calculatedAmount) {
     // The path 'amount' tells Joi which field the error is associated with.
-    return helpers.error('any.custom', { message: 'Order amount must equal the sum of item prices (qty * unit_price).' });
+    return helpers.error('any.custom', {
+      message: 'Order amount must equal the sum of item prices (qty * unit_price).',
+    });
   }
 
   return order;

@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'sns-backend',
+      name: 'sync-bridge',
       script: './build/server.js',
       instances: 'max', // Use all available CPU cores
       exec_mode: 'cluster', // Enable cluster mode for scalability

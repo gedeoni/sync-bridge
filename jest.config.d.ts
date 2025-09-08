@@ -1,5 +1,5 @@
 export let transform: {
-    '^.+.ts?$': string;
+  '^.+.ts?$': string;
 };
 export let testEnvironment: string;
 export let testRegex: string;

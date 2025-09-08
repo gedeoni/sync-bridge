@@ -40,4 +40,3 @@ export const customerRepository = sequelize.getRepository(Customer);
 export const productRepository = sequelize.getRepository(Product);
 export const orderRepository = sequelize.getRepository(Order);
 export const orderItemRepository = sequelize.getRepository(OrderItem);
-

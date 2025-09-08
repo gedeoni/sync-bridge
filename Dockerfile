@@ -16,8 +16,8 @@ FROM node:20-alpine
 
 RUN apk update && apk upgrade
 
-RUN npm install -g pm2 
-    
+RUN npm install -g pm2
+
 WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/package.json ./

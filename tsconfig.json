@@ -13,12 +13,6 @@
     "allowJs": true,
     "declaration": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "**/*.js"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "build", "**/*.js"]
 }

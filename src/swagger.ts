@@ -6,8 +6,7 @@ const options = {
     info: {
       title: 'Exporter Service API',
       version: '1.0.0',
-      description:
-        'API documentation for an Exporter Service, accepting data from various ERPs',
+      description: 'API documentation for an Exporter Service, accepting data from various ERPs',
     },
     servers: [
       {

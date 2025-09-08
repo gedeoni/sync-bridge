@@ -23,7 +23,8 @@ export class StatusController {
       const writeCheck = await this.checkWriteOperation();
 
       if (readCheck && writeCheck) {
-        responseWrapper({res,
+        responseWrapper({
+          res,
           status: httpCodes.OK,
           message: 'Service is healthy',
           data: {
@@ -35,7 +36,8 @@ export class StatusController {
       }
     } catch (error) {
       logger.error('Health check failed:', error);
-      responseWrapper({res,
+      responseWrapper({
+        res,
         status: httpCodes.SERVICE_UNAVAILABLE,
         message: 'Service is unhealthy',
         data: {
@@ -45,7 +47,7 @@ export class StatusController {
         },
       });
     }
-  }
+  };
 
   /**
    * Checks if the application can read from the database
@@ -72,11 +74,14 @@ export class StatusController {
     const transaction = await sequelize.transaction();
     try {
       // Create a temporary record
-      const tempRecord = await customerRepository.create({
-        email: 'healthcheck@example.com',
-        first_name: 'Health',
-        last_name: 'Check',
-      }, { transaction });
+      const tempRecord = await customerRepository.create(
+        {
+          email: 'healthcheck@example.com',
+          first_name: 'Health',
+          last_name: 'Check',
+        },
+        { transaction }
+      );
 
       // Delete the temporary record
       await tempRecord.destroy({ transaction });

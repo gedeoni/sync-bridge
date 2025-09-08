@@ -3,7 +3,6 @@ import { MainRoutes } from './api/controllers/main.routes';
 import { responseWrapper } from './helpers/responseWrapper';
 import httpCodes from './constants/httpCodes';
 import { errorHandler } from './middlewares/errors';
-import { customEnv } from './helpers/customEnv';
 import { collectDefaultMetrics, httpRequestDurationMicroseconds } from './helpers/metrics';
 import { requestIdMiddleware } from './middlewares/requestId';
 import { logger } from './helpers/logger';
