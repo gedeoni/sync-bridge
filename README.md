@@ -1,4 +1,4 @@
-# Exporter Service
+# Sync Bridge
 
 This is a Node.js exporter service built with TypeScript and Express.js. It provides a RESTful API for exporting data from one source (DB, ERP) to another (Destination DB).
 
