@@ -60,6 +60,25 @@ npm run build
 npm start
 ```
 
+## Sync History
+
+This service keeps a history of all sync requests. You can view the sync history and retry failed syncs using the following API endpoints:
+
+-   `GET /api/sync-history`: Get a list of all sync history records.
+    -   Query parameters:
+        -   `page`: The page number for pagination.
+        -   `size`: The number of items per page.
+        -   `status`: Filter by sync status (`successful`, `failed`, `invalid`, `pending_retry`).
+-   `GET /api/sync-history/:id`: Get the details of a specific sync history record.
+-   `POST /api/sync-history/retry/:id`: Retry a failed sync request.
+-   `DELETE /api/sync-history/:id`: Delete a sync history record.
+
+## Statistics
+
+To get statistics about the sync requests, you can use the following endpoint:
+
+-   `GET /api/sync/stats`: Get a summary of sync requests, including the total number of requests and the number of successful, failed, and invalid requests.
+
 ## Database
 
 This project uses Sequelize as an ORM. The database configuration is located in `src/databases/config/config.json`.

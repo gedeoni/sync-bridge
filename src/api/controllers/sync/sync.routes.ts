@@ -1,9 +1,25 @@
 import { Router } from 'express';
-import { sync } from './sync.controller';
+import { sync, getStats } from './sync.controller';
 import { validate } from '../../../middlewares/validate';
 import { syncSchema } from './sync.validation';
 
 const router = Router();
+
+/**
+ * @swagger
+ * /sync/stats:
+ *   get:
+ *     summary: Get statistics about sync requests
+ *     tags: [Sync]
+ *     responses:
+ *       200:
+ *         description: Sync statistics retrieved successfully.
+ *       401:
+ *         description: Unauthorized, missing or invalid authentication headers.
+ *       500:
+ *         description: Internal server error.
+ */
+router.get('/stats', getStats);
 
 /**
  * @swagger

@@ -4,9 +4,12 @@ import {
   orderRepository,
   productRepository,
   orderItemRepository,
+  syncHistoryRepository,
+  sequelize,
 } from '../../../databases/sequelize';
 import { responseWrapper } from '../../../helpers/responseWrapper';
 import { logger } from '../../../helpers/logger';
+import  SyncHistory, { SyncStatus }  from '../../../databases/models/syncHistory.model';
 
 const repositories: { [key: string]: any } = {
   customers: customerRepository,
@@ -16,11 +19,18 @@ const repositories: { [key: string]: any } = {
 
 export const sync = async (req: Request, res: Response) => {
   const { model, data } = req.body;
+
+  const syncHistory = await syncHistoryRepository.create({
+    payload: req.body,
+    status: SyncStatus.PENDING_RETRY,
+  });
+
   const repository = repositories[model];
 
   if (!repository) {
     logger.error(`Invalid model: ${model}`);
-    return responseWrapper({ res, status: 400, message: `Invalid model: ${model}` });
+    await syncHistory.update({ status: SyncStatus.INVALID, failure_reason: `Invalid model: ${model}` });
+    return responseWrapper({res, status: 400, message: `Invalid model: ${model}`} );
   }
 
   try {
@@ -50,10 +60,12 @@ export const sync = async (req: Request, res: Response) => {
         results.push({ id: created.id, status: 'created' });
       }
     }
-    return responseWrapper({ res, status: 200, message: 'Sync successful', data: { results } });
-  } catch (error) {
+    await syncHistory.update({ status: SyncStatus.SUCCESSFUL });
+    return responseWrapper({res, status: 200, message: 'Sync successful', data: { results } });
+  } catch (error: any) {
     logger.error('Sync error:', error);
-    return responseWrapper({ res, status: 500, message: 'Sync failed' });
+    await syncHistory.update({ status: SyncStatus.FAILED, failure_reason: error.message });
+    return responseWrapper({res, status: 500, message: 'Sync failed'} );
   }
 };
 
@@ -64,4 +76,33 @@ const upsertOrderItem = async (orderItem: any) => {
     const createdOrderItem = await orderItemRepository.create(orderItem);
     orderItem.id = createdOrderItem.id;
   }
+};
+
+export const getStats = async (req: Request, res: Response) => {
+  const stats = await syncHistoryRepository.findAll({
+    attributes: [
+      'status',
+      [sequelize.fn('COUNT', sequelize.col('status')), 'count'],
+    ],
+    group: ['status'],
+  });
+
+  const statsSummary: { [key: string]: number } = {
+    successful: 0,
+    failed: 0,
+    invalid: 0,
+    pending_retry: 0,
+    total: 0,
+  };
+
+  let total = 0;
+  for (const stat of stats) {
+    const { status, count } = stat.get() as any;
+    const numCount = parseInt(count, 10);
+    statsSummary[status] = numCount;
+    total += numCount;
+  }
+  statsSummary.total = total;
+
+  return responseWrapper({res, status: 200, message: 'Sync stats retrieved successfully', data: statsSummary});
 };

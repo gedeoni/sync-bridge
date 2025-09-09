@@ -2,6 +2,7 @@ import express from 'express';
 import type { Router } from 'express';
 import syncRoutes from './sync/sync.routes';
 import statusRoutes from './status/status.routes';
+import syncHistoryRoutes from './sync-history/syncHistory.routes';
 import { isAuth } from '../../middlewares/auth.middleware';
 
 export class MainRoutes {
@@ -18,5 +19,6 @@ export class MainRoutes {
   private routes(): void {
     this._router.use(`/sync`, isAuth, syncRoutes);
     this._router.use(`/healthz`, statusRoutes);
+    this._router.use(`/sync-history`, isAuth, syncHistoryRoutes);
   }
 }

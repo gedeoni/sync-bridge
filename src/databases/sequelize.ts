@@ -5,12 +5,13 @@ import Customer from './models/customers.model';
 import Product from './models/products.model';
 import Order from './models/orders.model';
 import OrderItem from './models/orderItems.model';
+import SyncHistory  from './models/syncHistory.model';
 
 const dbUri = customEnv.DATABASE_URI as string;
 
 export const connect = (url: string) => {
   const sequelize = new Sequelize(url, {
-    models: [Customer, Product, Order, OrderItem],
+    models: [Customer, Product, Order, OrderItem, SyncHistory],
     repositoryMode: true,
     replication: {
       read: [{ host: customEnv.SLAVE_ONE }],
@@ -40,3 +41,4 @@ export const customerRepository = sequelize.getRepository(Customer);
 export const productRepository = sequelize.getRepository(Product);
 export const orderRepository = sequelize.getRepository(Order);
 export const orderItemRepository = sequelize.getRepository(OrderItem);
+export const syncHistoryRepository = sequelize.getRepository(SyncHistory);
