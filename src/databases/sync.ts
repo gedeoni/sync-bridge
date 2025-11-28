@@ -10,4 +10,6 @@ export default sequelize
   })
   .catch((err) => {
     logger.error('Error syncing database', err);
+    // re-throw the error to be caught by the caller
+    throw err;
   });

@@ -1,30 +1,62 @@
+import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 import * as http from 'http';
 import './databases/sequelize';
-import './databases/sync';
-import app from './app';
 import { logger } from './helpers/logger';
 import { customEnv } from './helpers/customEnv';
 
+import { startApolloServer } from './graphql/server';
+import { startGraphQLWSServer, WsCleanup } from './graphql/ws';
+
+import { responseWrapper } from './helpers/responseWrapper';
+import httpCodes from './constants/httpCodes';
+
+import sequelize from './databases/sync';
+import app from './app';
+
 const server = http.createServer(app);
+let wsCleanup: WsCleanup | null = null;
 const port = customEnv.APP_PORT ?? 4007;
 
-server.listen(port, () => {
-  // eslint-disable-next-line no-console
-  logger.info(`Server is running on port ${port}`);
-});
+const startServer = async () => {
+  await sequelize; // Wait for the database to sync
+  const { schema } = await startApolloServer(app);
+  // Start WebSocket server for GraphQL Subscriptions (graphql-ws)
+  const { cleanup } = startGraphQLWSServer({ httpServer: server, schema, path: '/graphql' });
+  wsCleanup = cleanup;
+
+  // 404 handler
+  app.use((_req, res) =>
+    responseWrapper({
+      res,
+      status: httpCodes.NOT_FOUND,
+      message: 'Contact Our Team for API Docs',
+    })
+  );
+
+  server.listen(port, () => {
+    // eslint-disable-next-line no-console
+    logger.info(`Server is running on port ${port}`);
+  });
+};
+
+startServer();
 
 // Graceful shutdown function
 const gracefulShutdown = (reason: string, exitCode = 1) => {
   logger.info(`Shutting down server gracefully. Reason: ${reason}`);
 
-  server.close(() => {
+  server.close(async () => {
     logger.info('HTTP server closed');
 
     // Close database connections here if needed
     // e.g., sequelize.close()
+    if (wsCleanup) {
+      await wsCleanup.dispose();
+      logger.info('WebSocket server closed');
+    }
 
     process.exit(exitCode);
   });
