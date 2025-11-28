@@ -1,5 +1,5 @@
 import express from 'express';
-import { MainRoutes } from './api/controllers/main.routes';
+import { MainRoutes } from './routes/main.routes';
 import { responseWrapper } from './helpers/responseWrapper';
 import httpCodes from './constants/httpCodes';
 import { errorHandler } from './middlewares/errors';

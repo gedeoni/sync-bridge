@@ -1,9 +1,9 @@
 import express from 'express';
 import type { Router } from 'express';
-import syncRoutes from './sync/sync.routes';
-import statusRoutes from './status/status.routes';
-import syncHistoryRoutes from './sync-history/syncHistory.routes';
-import { isAuth } from '../../middlewares/auth.middleware';
+import syncRoutes from '../api/controllers/sync/sync.routes';
+import statusRoutes from '../api/controllers/status/status.routes';
+import syncHistoryRoutes from '../api/controllers/sync-history/syncHistory.routes';
+import { isAuth } from '../middlewares/auth.middleware';
 
 export class MainRoutes {
   private readonly _router = express.Router();

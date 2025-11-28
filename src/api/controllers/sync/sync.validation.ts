@@ -54,13 +54,40 @@ export const orderSchema = Joi.object({
   return order;
 });
 
+export const employeeSchema = Joi.object({
+  id: Joi.string().required(),
+  employeeId: Joi.string().required(),
+  firstName: Joi.string().required(),
+  middleName: Joi.string().optional().allow(null, ''),
+  lastName: Joi.string().required(),
+  gender: Joi.string().optional().allow(null, ''),
+  email: Joi.string().email().optional().allow(null, ''),
+  phoneNumber: Joi.string().optional().allow(null, ''),
+  dateOfBirth: Joi.date().optional().allow(null),
+  nationality: Joi.string().optional().allow(null, ''),
+  jobLevel: Joi.string().optional().allow(null, ''),
+  department: Joi.string().optional().allow(null, ''),
+  location: Joi.string().optional().allow(null, ''),
+  bankAccountNumber: Joi.string().optional().allow(null, ''),
+  company: Joi.string().optional().allow(null, ''),
+  jobTitle: Joi.string().optional().allow(null, ''),
+  costCenter: Joi.string().optional().allow(null, ''),
+  startDate: Joi.date().optional().allow(null),
+  employeeStatus: Joi.string().optional().allow(null, ''),
+  managerId: Joi.string().optional().allow(null, ''),
+  managerEmail: Joi.string().email().optional().allow(null, ''),
+  lastModifiedOn: Joi.date().optional().allow(null),
+  lastModified: Joi.number().optional().allow(null),
+});
+
 export const syncSchema = Joi.object({
-  model: Joi.string().valid('customers', 'products', 'orders').required(),
+  model: Joi.string().valid('customers', 'products', 'orders', 'employees').required(),
   data: Joi.when('model', {
     switch: [
       { is: 'customers', then: Joi.array().items(customerSchema).min(1).required() },
       { is: 'products', then: Joi.array().items(productSchema).min(1).required() },
       { is: 'orders', then: Joi.array().items(orderSchema).min(1).required() },
+      { is: 'employees', then: Joi.array().items(employeeSchema).min(1).required() },
     ],
     otherwise: Joi.forbidden(),
   }),

@@ -5,13 +5,15 @@ import Customer from './models/customers.model';
 import Product from './models/products.model';
 import Order from './models/orders.model';
 import OrderItem from './models/orderItems.model';
-import SyncHistory  from './models/syncHistory.model';
+import  SyncHistory  from './models/syncHistory.model';
+import Employee from './models/employee.model';
 
 const dbUri = customEnv.DATABASE_URI as string;
 
 export const connect = (url: string) => {
   const sequelize = new Sequelize(url, {
-    models: [Customer, Product, Order, OrderItem, SyncHistory],
+    models: [Customer, Product, Order, OrderItem, SyncHistory, Employee],
+    schema: customEnv.DB_SCHEMA || 'public',
     repositoryMode: true,
     replication: {
       read: [{ host: customEnv.SLAVE_ONE }],
@@ -42,3 +44,4 @@ export const productRepository = sequelize.getRepository(Product);
 export const orderRepository = sequelize.getRepository(Order);
 export const orderItemRepository = sequelize.getRepository(OrderItem);
 export const syncHistoryRepository = sequelize.getRepository(SyncHistory);
+export const employeeRepository = sequelize.getRepository(Employee);

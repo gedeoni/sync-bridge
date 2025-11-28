@@ -87,6 +87,7 @@ This project uses Sequelize as an ORM. The database configuration is located in 
 
 The following commands are available for running database migrations:
 
+- `npm run db:sync`: sync all tables as defined by the model.
 - `npm run db:migrate`: Run all pending migrations.
 - `npm run db:migrate:undo`: Revert the last migration.
 - `npm run db:migrate:undo:all`: Revert all migrations.

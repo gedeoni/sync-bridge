@@ -5,16 +5,19 @@ import {
   productRepository,
   orderItemRepository,
   syncHistoryRepository,
+  employeeRepository,
   sequelize,
 } from '../../../databases/sequelize';
 import { responseWrapper } from '../../../helpers/responseWrapper';
 import { logger } from '../../../helpers/logger';
 import  SyncHistory, { SyncStatus }  from '../../../databases/models/syncHistory.model';
+import { Repository, Model } from 'sequelize-typescript';
 
 const repositories: { [key: string]: any } = {
   customers: customerRepository,
   products: productRepository,
   orders: orderRepository,
+  employees: employeeRepository,
 };
 
 export const sync = async (req: Request, res: Response) => {
@@ -37,7 +40,7 @@ export const sync = async (req: Request, res: Response) => {
     const results = [];
     for (const item of data) {
       const { id, ...attributes } = item;
-      if (id) {
+      if (await doesIdExist(repository, id)) {
         const [updatedCount] = await repository.update(attributes, { where: { id } });
         if (updatedCount > 0) {
           results.push({ id, status: 'updated' });
@@ -65,7 +68,7 @@ export const sync = async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Sync error:', error);
     await syncHistory.update({ status: SyncStatus.FAILED, failure_reason: error.message });
-    return responseWrapper({res, status: 500, message: 'Sync failed'} );
+    return responseWrapper({res, status: 500, message: error.message} );
   }
 };
 
@@ -76,6 +79,14 @@ const upsertOrderItem = async (orderItem: any) => {
     const createdOrderItem = await orderItemRepository.create(orderItem);
     orderItem.id = createdOrderItem.id;
   }
+};
+
+const doesIdExist = async <T extends Model>(repository: Repository<T>, id: any): Promise<boolean> => {
+  if(id){
+    let record = await repository.findOne({ where: { id } });
+    return !!record;
+  }
+  return false;
 };
 
 export const getStats = async (req: Request, res: Response) => {

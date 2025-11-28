@@ -9,5 +9,8 @@ build/
 *.log
 *.log*
 
+# Omit some scripts
+*.py
+
 # Miscellaneous
 .DS_Store
