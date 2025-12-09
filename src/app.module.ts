@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SyncModule } from './sync/sync.module';
 import { SyncHistoryModule } from './sync-history/sync-history.module';
@@ -13,6 +13,8 @@ import { Order } from './sync/entities/order.entity';
 import { OrderItem } from './sync/entities/order-item.entity';
 import { Employee } from './sync/entities/employee.entity';
 import { SyncHistory } from './sync/entities/sync-history.entity';
+import { MetricsService } from './common/services/metrics.service';
+import { MonitoredInterceptor } from './common/interceptors/monitored.interceptor';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { SyncHistory } from './sync/entities/sync-history.entity';
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     { provide: APP_GUARD, useClass: ApiKeyAuthGuard },
+    { provide: APP_INTERCEPTOR, useClass: MonitoredInterceptor },
+    MetricsService,
   ],
 })
 export class AppModule {}

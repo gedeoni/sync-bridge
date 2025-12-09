@@ -38,9 +38,9 @@ NestJS implementation of the Sync Bridge API mirrored from the Spring Boot versi
 - Orders enforce `amount` equals the sum of item `qty * unit_price` when items are provided; otherwise `amount` is required.
 - Sync attempts are recorded in `sync_history` with statuses: `pending_retry`, `successful`, `failed`, `invalid`.
 - Unique constraint violations return `409 Conflict` with sanitized field messaging.
+- Aspect-style instrumentation via `@Monitored` + global interceptor records success/error counts and latency per endpoint, logging structured JSON with tags and request IDs.
 
 ## Configuration
 - `APP_AUTH_TOKEN` — required for all routes except health.
 - `DB_PATH` — SQLite file path (default `sync-bridge.db`).
 - `PORT` — server port (default `3000`).
-
