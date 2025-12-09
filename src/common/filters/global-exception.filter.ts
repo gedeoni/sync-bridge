@@ -1,11 +1,14 @@
 import {
   ArgumentsHost,
   Catch,
+  ConflictException,
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { GqlArgumentsHost } from '@nestjs/graphql';
 import { Response } from 'express';
 import { QueryFailedError } from 'typeorm';
 import { responseWithStatus } from '../utils/response.util';
@@ -15,6 +18,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
+    const contextType = host.getType<string>();
+    if (contextType === 'graphql') {
+      return this.handleGraphql(exception, host);
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 
@@ -44,6 +52,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return response.status(payload.status).json(payload);
   }
 
+  private handleGraphql(exception: unknown, host: ArgumentsHost) {
+    if (exception instanceof HttpException) {
+      return exception;
+    }
+
+    if (exception instanceof QueryFailedError) {
+      const message = this.extractUniqueConstraintMessage(exception.message);
+      return new ConflictException(message);
+    }
+
+    this.logger.error(exception);
+    return new InternalServerErrorException('Internal Server Error');
+  }
+
   private extractUniqueConstraintMessage(message: string) {
     if (message?.toLowerCase().includes('unique')) {
       const match = message.match(/UNIQUE constraint failed: ([^\s]+)/i);
@@ -55,4 +77,3 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return 'Data constraint violation';
   }
 }
-

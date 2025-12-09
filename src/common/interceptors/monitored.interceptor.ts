@@ -6,6 +6,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GqlExecutionContext } from '@nestjs/graphql';
 import { randomUUID } from 'crypto';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { MetricsService } from '../services/metrics.service';
@@ -33,9 +34,9 @@ export class MonitoredInterceptor implements NestInterceptor {
 
     const startedAt = process.hrtime.bigint();
     const timestamp = new Date().toISOString();
-    const req = context.switchToHttp().getRequest();
+    const req = this.getRequest(context);
     const requestId = this.ensureRequestId(req);
-    const tags = this.extractTags(req, options.tags ?? []);
+    const tags = this.extractTags(req, options.tags ?? [], context);
 
     this.logger.log(
       JSON.stringify({
@@ -96,12 +97,22 @@ export class MonitoredInterceptor implements NestInterceptor {
     );
   }
 
-  private extractTags(req: any, tagNames: string[]) {
+  private extractTags(req: any, tagNames: string[], context: ExecutionContext) {
     const tags: Record<string, string> = {};
     if (!tagNames.length) return tags;
 
+    let gqlArgs: Record<string, unknown> | undefined;
+    if (context.getType().toString() === 'graphql') {
+      const gqlCtx = GqlExecutionContext.create(context);
+      gqlArgs = gqlCtx.getArgs();
+    }
+
     tagNames.forEach((name) => {
-      const val = req?.body?.[name] ?? req?.params?.[name] ?? req?.query?.[name];
+      const val =
+        req?.body?.[name] ??
+        req?.params?.[name] ??
+        req?.query?.[name] ??
+        (gqlArgs ? gqlArgs[name] : undefined);
       if (val !== undefined) {
         tags[name] = String(val);
       }
@@ -112,9 +123,18 @@ export class MonitoredInterceptor implements NestInterceptor {
   private ensureRequestId(req: any) {
     const existing = req?.headers?.['x-request-id'];
     const id = existing || randomUUID();
-    if (req && req.headers) {
+    if (req?.headers) {
       req.headers['x-request-id'] = id;
     }
     return id;
+  }
+
+  private getRequest(context: ExecutionContext) {
+    if (context.getType().toString() === 'graphql') {
+      const gqlCtx = GqlExecutionContext.create(context);
+      const ctx = gqlCtx.getContext();
+      return ctx?.req || ctx?.request;
+    }
+    return context.switchToHttp().getRequest();
   }
 }

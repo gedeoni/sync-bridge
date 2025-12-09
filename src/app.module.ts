@@ -15,6 +15,7 @@ import { Employee } from './sync/entities/employee.entity';
 import { SyncHistory } from './sync/entities/sync-history.entity';
 import { MetricsService } from './common/services/metrics.service';
 import { MonitoredInterceptor } from './common/interceptors/monitored.interceptor';
+import { GraphqlModule } from './graphql/graphql.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MonitoredInterceptor } from './common/interceptors/monitored.intercepto
     SyncModule,
     SyncHistoryModule,
     HealthModule,
+    GraphqlModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

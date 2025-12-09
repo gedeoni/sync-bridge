@@ -40,6 +40,16 @@ NestJS implementation of the Sync Bridge API mirrored from the Spring Boot versi
 - Unique constraint violations return `409 Conflict` with sanitized field messaging.
 - Aspect-style instrumentation via `@Monitored` + global interceptor records success/error counts and latency per endpoint, logging structured JSON with tags and request IDs.
 
+## GraphQL
+- Available at `/graphql` with playground enabled.
+- Employee operations:
+  - `employees(offset, limit)` list
+  - `employee(id)` by id
+  - `searchEmployees(search, offset, limit)`
+  - `createEmployee`, `updateEmployee`, `deleteEmployee` mutations
+  - Subscription `employeeCreated` (graphql-ws) emits on creation
+- Uses same auth header (`x-auth-token`) via the global guard.
+
 ## Configuration
 - `APP_AUTH_TOKEN` — required for all routes except health.
 - `DB_PATH` — SQLite file path (default `sync-bridge.db`).
