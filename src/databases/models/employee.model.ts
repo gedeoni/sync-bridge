@@ -36,7 +36,7 @@ export class Employee extends Model<Employee> {
   @Column(DataType.STRING)
   email!: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column(DataType.STRING)
   phoneNumber!: string;
 

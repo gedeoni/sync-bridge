@@ -41,7 +41,7 @@ type Employee {
   managerId: String
   middleName: String
   nationality: String!
-  phoneNumber: String!
+  phoneNumber: String
   startDate: DateTimeISO!
 }
 

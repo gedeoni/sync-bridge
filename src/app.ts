@@ -1,7 +1,5 @@
 import express from 'express';
 import { MainRoutes } from './routes/main.routes';
-import { responseWrapper } from './helpers/responseWrapper';
-import httpCodes from './constants/httpCodes';
 import { errorHandler } from './middlewares/errors';
 import { collectDefaultMetrics, httpRequestDurationMicroseconds } from './helpers/metrics';
 import { requestIdMiddleware } from './middlewares/requestId';
@@ -31,20 +29,12 @@ app.use((req, res, next) => {
 
 const mainRoutes = new MainRoutes().router;
 
-app.use(`/api/v1`, mainRoutes);
+app.use('/api/v1', mainRoutes);
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger';
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-app.use((_req, res) =>
-  responseWrapper({
-    res,
-    status: httpCodes.NOT_FOUND,
-    message: 'Contact Our Team for API Docs',
-  })
-);
 
 app.use(errorHandler);
 

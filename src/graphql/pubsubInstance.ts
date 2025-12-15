@@ -15,7 +15,7 @@ class TGPubSubAdapter {
   subscribe(routingKey: string, _dynamicId?: unknown): AsyncIterable<unknown> {
     const it = this.inner.asyncIterator(routingKey as any) as AsyncIterator<unknown>;
     const asyncIterable: AsyncIterable<unknown> & AsyncIterator<unknown> = {
-      next(...args: [] | [unknown]) {
+      next(...args: [] | [undefined]) {
         return it.next(...args);
       },
       return(value?: unknown) {
