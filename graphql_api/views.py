@@ -16,5 +16,5 @@ async def graphql_view(request, *args, **kwargs):
             payload = response_with_status(401, 'Access Denied')
             return JsonResponse(payload, status=401)
 
-    view = AsyncGraphQLView.as_view(schema=schema, graphiql=True)
+    view = AsyncGraphQLView.as_view(schema=schema, graphql_ide="graphiql")
     return await view(request, *args, **kwargs)

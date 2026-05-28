@@ -44,6 +44,10 @@ Sync Bridge is a robust data synchronization service built with Django. It serve
    ```bash
    uv run python manage.py runserver
    ```
+5. Run the automated tests
+   ```bash
+   uv run python manage.py test
+   ```
 
 ## Endpoints
 - `GET /api/docs/` — Swagger UI API documentation (interactive)
@@ -74,3 +78,11 @@ Subscriptions run over WebSockets on `/graphql` using the `graphql-ws` protocol.
 - `APP_AUTH_TOKEN` — required for all routes except health.
 - `DB_PATH` — SQLite file path (default `sync-bridge.db`).
 - `PORT` — server port (default `8000` via runserver).
+
+## Running Tests
+The project features a comprehensive unit test suite covering the authentication layer, bulk REST sync payloads, database transaction atomicity, GraphQL views, and custom middlewares.
+
+To run the automated tests inside an isolated, in-memory test database, execute:
+```bash
+uv run python manage.py test
+```
