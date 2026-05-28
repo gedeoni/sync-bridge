@@ -10,15 +10,22 @@ class AuthGraphQLWSConsumer(GraphQLWSConsumer):
         expected = settings.APP_AUTH_TOKEN
         token = None
         if payload:
-            token = payload.get('x-auth-token') or payload.get('X-Auth-Token') or payload.get('authorization')
+            token = (
+                payload.get("x-auth-token")
+                or payload.get("X-Auth-Token")
+                or payload.get("authorization")
+            )
         if not token:
-            headers = {key.decode(): value.decode() for key, value in self.scope.get('headers', [])}
-            token = headers.get('x-auth-token')
+            headers = {
+                key.decode(): value.decode()
+                for key, value in self.scope.get("headers", [])
+            }
+            token = headers.get("x-auth-token")
         if not expected or token != expected:
             await self.close(code=4401)
             return
 
 
 websocket_urlpatterns = [
-    re_path(r'^graphql$', AuthGraphQLWSConsumer.as_asgi(schema=schema)),
+    re_path(r"^graphql$", AuthGraphQLWSConsumer.as_asgi(schema=schema)),
 ]

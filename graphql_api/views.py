@@ -9,11 +9,13 @@ from .schema import schema
 
 @csrf_exempt
 async def graphql_view(request, *args, **kwargs):
-    if request.method != 'GET':
-        token = request.headers.get('x-auth-token') or request.headers.get('X-Auth-Token')
+    if request.method != "GET":
+        token = request.headers.get("x-auth-token") or request.headers.get(
+            "X-Auth-Token"
+        )
         expected = settings.APP_AUTH_TOKEN
-        if not expected or not secrets.compare_digest(token or '', expected):
-            payload = response_with_status(401, 'Access Denied')
+        if not expected or not secrets.compare_digest(token or "", expected):
+            payload = response_with_status(401, "Access Denied")
             return JsonResponse(payload, status=401)
 
     view = AsyncGraphQLView.as_view(schema=schema, graphql_ide="graphiql")

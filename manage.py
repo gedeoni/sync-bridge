@@ -5,9 +5,10 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sync_bridge.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sync_bridge.settings")
     try:
         import dotenv
+
         dotenv.load_dotenv()
     except ImportError:
         pass
@@ -20,5 +21,5 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

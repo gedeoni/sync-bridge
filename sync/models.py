@@ -5,7 +5,7 @@ class Customer(models.Model):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
-    default_currency = models.CharField(max_length=3, default='USD')
+    default_currency = models.CharField(max_length=3, default="USD")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -17,7 +17,7 @@ class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    currency = models.CharField(max_length=3, default='USD')
+    currency = models.CharField(max_length=3, default="USD")
     active = models.BooleanField(default=True)
     weight_grams = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -29,9 +29,11 @@ class Product(models.Model):
 
 class Order(models.Model):
     order_number = models.CharField(max_length=64, unique=True)
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='orders')
+    customer = models.ForeignKey(
+        Customer, on_delete=models.PROTECT, related_name="orders"
+    )
     status = models.CharField(max_length=32)
-    currency = models.CharField(max_length=3, default='USD')
+    currency = models.CharField(max_length=3, default="USD")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     placed_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,7 +43,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     qty = models.IntegerField()
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -74,7 +76,7 @@ class Employee(models.Model):
     @property
     def full_name(self) -> str:
         parts = [self.first_name, self.middle_name, self.last_name]
-        return ' '.join([part for part in parts if part])
+        return " ".join([part for part in parts if part])
 
     def __str__(self) -> str:
         return self.email

@@ -4,23 +4,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='SyncHistory',
+            name="SyncHistory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('payload', models.TextField()),
-                ('status', models.CharField(choices=[('successful', 'Successful'), ('failed', 'Failed'), ('invalid', 'Invalid'), ('pending_retry', 'Pending Retry')], default='pending_retry', max_length=32)),
-                ('failure_reason', models.TextField(blank=True, null=True)),
-                ('retries', models.IntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("payload", models.TextField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("successful", "Successful"),
+                            ("failed", "Failed"),
+                            ("invalid", "Invalid"),
+                            ("pending_retry", "Pending Retry"),
+                        ],
+                        default="pending_retry",
+                        max_length=32,
+                    ),
+                ),
+                ("failure_reason", models.TextField(blank=True, null=True)),
+                ("retries", models.IntegerField(default=0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
     ]

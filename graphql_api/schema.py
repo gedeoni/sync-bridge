@@ -36,12 +36,12 @@ class EmployeeType:
     full_name: str = strawberry.field(resolver=lambda root: root.full_name)
 
 
-@strawberry_django.input(Employee, exclude=['id'])
+@strawberry_django.input(Employee, exclude=["id"])
 class CreateEmployeeInput:
     pass
 
 
-@strawberry_django.input(Employee, partial=True, exclude=['id'])
+@strawberry_django.input(Employee, partial=True, exclude=["id"])
 class UpdateEmployeeInput:
     pass
 
@@ -50,7 +50,7 @@ class UpdateEmployeeInput:
 class Query:
     @strawberry.field
     async def employees(self, offset: int = 0, limit: int = 10) -> list[EmployeeType]:
-        qs = Employee.objects.all()[offset:offset + limit]
+        qs = Employee.objects.all()[offset : offset + limit]
         return await sync_to_async(list)(qs)
 
     @strawberry.field
@@ -58,13 +58,15 @@ class Query:
         return await Employee.objects.filter(pk=id).afirst()
 
     @strawberry.field
-    async def searchEmployees(self, search: str, offset: int = 0, limit: int = 10) -> list[EmployeeType]:
+    async def searchEmployees(
+        self, search: str, offset: int = 0, limit: int = 10
+    ) -> list[EmployeeType]:
         query = (
             Q(first_name__icontains=search)
             | Q(last_name__icontains=search)
             | Q(email__icontains=search)
         )
-        qs = Employee.objects.filter(query)[offset:offset + limit]
+        qs = Employee.objects.filter(query)[offset : offset + limit]
         return await sync_to_async(list)(qs)
 
 
@@ -72,17 +74,23 @@ class Query:
 class Mutation:
     @strawberry.mutation
     async def createEmployee(self, data: CreateEmployeeInput) -> EmployeeType:
-        employee_data = {k: v for k, v in asdict(data).items() if v is not strawberry.UNSET}
+        employee_data = {
+            k: v for k, v in asdict(data).items() if v is not strawberry.UNSET
+        }
         employee = await Employee.objects.acreate(**employee_data)
-        await pubsub.publish('employee_created', employee)
+        await pubsub.publish("employee_created", employee)
         return employee
 
     @strawberry.mutation
-    async def updateEmployee(self, id: int, data: UpdateEmployeeInput) -> EmployeeType | None:
+    async def updateEmployee(
+        self, id: int, data: UpdateEmployeeInput
+    ) -> EmployeeType | None:
         employee = await Employee.objects.filter(pk=id).afirst()
         if not employee:
             return None
-        employee_data = {k: v for k, v in asdict(data).items() if v is not strawberry.UNSET}
+        employee_data = {
+            k: v for k, v in asdict(data).items() if v is not strawberry.UNSET
+        }
         for key, value in employee_data.items():
             setattr(employee, key, value)
         await employee.asave()
@@ -100,7 +108,7 @@ class Mutation:
 class Subscription:
     @strawberry.subscription
     async def employeeCreated(self) -> AsyncGenerator[EmployeeType, None]:
-        async for employee in pubsub.subscribe('employee_created'):
+        async for employee in pubsub.subscribe("employee_created"):
             yield employee
 
 

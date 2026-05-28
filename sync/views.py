@@ -18,35 +18,35 @@ from sync_history.models import SyncHistory
 class SyncView(APIView):
     @extend_schema(
         request=PolymorphicProxySerializer(
-            component_name='SyncRequest',
+            component_name="SyncRequest",
             serializers={
-                'customers': CustomerSyncRequestSerializer,
-                'products': ProductSyncRequestSerializer,
-                'orders': OrderSyncRequestSerializer,
-                'employees': EmployeeSyncRequestSerializer,
+                "customers": CustomerSyncRequestSerializer,
+                "products": ProductSyncRequestSerializer,
+                "orders": OrderSyncRequestSerializer,
+                "employees": EmployeeSyncRequestSerializer,
             },
-            resource_type_field_name='model',
+            resource_type_field_name="model",
         ),
         summary="Ingest data synchronization payloads",
-        description="Ingest business data in bulk (customers, products, orders, employees) with automatic validation."
+        description="Ingest business data in bulk (customers, products, orders, employees) with automatic validation.",
     )
-    @monitored('sync.operation', tags=['model'])
+    @monitored("sync.operation", tags=["model"])
     def post(self, request):
         serializer = SyncRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
-        result = sync_payload(payload['model'], payload['data'])
-        return Response(ok('Sync successful', result))
+        result = sync_payload(payload["model"], payload["data"])
+        return Response(ok("Sync successful", result))
 
 
 class SyncStatsView(APIView):
-    @monitored('sync.stats')
+    @monitored("sync.stats")
     def get(self, request):
-        rows = SyncHistory.objects.values('status').annotate(count=Count('id'))
+        rows = SyncHistory.objects.values("status").annotate(count=Count("id"))
         summary = {}
         total = 0
         for row in rows:
-            summary[row['status']] = row['count']
-            total += row['count']
-        summary['total'] = total
-        return Response(ok('Sync stats retrieved successfully', summary))
+            summary[row["status"]] = row["count"]
+            total += row["count"]
+        summary["total"] = total
+        return Response(ok("Sync stats retrieved successfully", summary))
