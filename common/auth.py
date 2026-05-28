@@ -7,7 +7,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 class ApiKeyAuthentication(BaseAuthentication):
     def authenticate(self, request) -> Optional[Tuple[AnonymousUser, str]]:
-        if request.path.rstrip('/') == '/api/v1/healthz':
+        if request.method == 'GET' or request.path.rstrip('/') == '/api/v1/healthz':
             return None
 
         token = request.headers.get('x-auth-token') or request.headers.get('X-Auth-Token')

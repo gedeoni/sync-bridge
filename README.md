@@ -18,10 +18,17 @@ Sync Bridge is a robust data synchronization service built with Django. It serve
 
 ## Quick start
 1. Create a virtual environment and install dependencies
+   
+   **Option A: Using standard pip**
    ```bash
    python -m venv .venv
    source .venv/bin/activate
    pip install -r requirements.txt
+   ```
+
+   **Option B: Using uv (Fastest)**
+   ```bash
+   uv sync
    ```
 2. Copy the env template and set your auth token
    ```bash
@@ -35,10 +42,13 @@ Sync Bridge is a robust data synchronization service built with Django. It serve
    ```
 4. Start the API
    ```bash
-   python manage.py runserver
+   uv run python manage.py runserver
    ```
 
 ## Endpoints
+- `GET /api/docs/` — Swagger UI API documentation (interactive)
+- `GET /api/redoc/` — ReDoc API documentation (clean alternative)
+- `GET /api/schema/` — OpenAPI 3.0 schema (JSON download)
 - `GET /api/v1/healthz` — health + DB read/write probe (no auth)
 - `POST /api/v1/sync` — body `{ model: customers|products|orders|employees, data: [...] }`
 - `GET /api/v1/sync/stats` — aggregate sync history counts
@@ -47,7 +57,7 @@ Sync Bridge is a robust data synchronization service built with Django. It serve
 - `POST /api/v1/sync-history/retry/:id` — retry failed entry (sets `pending_retry`)
 - `DELETE /api/v1/sync-history/:id` — delete history entry
 
-All routes except health require `x-auth-token` matching `APP_AUTH_TOKEN`.
+All write operations (POST, DELETE, etc.) require an `x-auth-token` matching `APP_AUTH_TOKEN` in the headers. All `GET` requests (including accessing the interactive GraphQL playground and REST/Swagger documentation) are open and do not require authentication.
 
 ## GraphQL
 - Available at `/graphql` (GraphiQL enabled).
