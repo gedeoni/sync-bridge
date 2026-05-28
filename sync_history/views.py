@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from common.responses import ok, response_with_status
+from common.responses import ok
 from common.monitoring import monitored
 from .models import SyncHistory, SyncStatus
 from .serializers import SyncHistorySerializer

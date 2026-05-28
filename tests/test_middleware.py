@@ -38,6 +38,7 @@ class MiddlewareTests(TestCase):
 
         response = middleware(request)
 
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(hasattr(request, '_monitor_start'))
         self.assertEqual(request._monitor_name, 'unknown')
         self.assertEqual(request._monitor_tags, [])

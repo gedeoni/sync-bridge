@@ -4,7 +4,6 @@ from rest_framework.exceptions import ValidationError
 from django.db import transaction, models
 import rest_framework.serializers as serializers
 
-from .models import Customer, Product, Order, OrderItem, Employee
 from .serializers import (
     CustomerSyncSerializer,
     ProductSyncSerializer,

@@ -1,7 +1,6 @@
 import re
 from decimal import Decimal
 from rest_framework import serializers
-from drf_spectacular.utils import PolymorphicProxySerializer
 from .models import Customer, Product, Order, OrderItem, Employee
 
 
