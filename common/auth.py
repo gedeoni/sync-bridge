@@ -1,13 +1,27 @@
 import secrets
 from typing import Optional, Tuple
 from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 
+class ApiKeyUser:
+    """Represent an authenticated API client using a valid x-auth-token."""
+
+    is_authenticated = True
+    is_anonymous = False
+    pk = 1
+
+    def __init__(self, token: str):
+        self.token = token
+        self.username = "api_key_user"
+
+    def __str__(self):
+        return self.username
+
+
 class ApiKeyAuthentication(BaseAuthentication):
-    def authenticate(self, request) -> Optional[Tuple[AnonymousUser, str]]:
+    def authenticate(self, request) -> Optional[Tuple[ApiKeyUser, str]]:
         if request.method == "GET" or request.path.rstrip("/") == "/api/v1/healthz":
             return None
 
@@ -19,7 +33,7 @@ class ApiKeyAuthentication(BaseAuthentication):
         if not expected or not secrets.compare_digest(token or "", expected):
             raise AuthenticationFailed({"status": 401, "message": "Access Denied"})
 
-        return AnonymousUser(), token
+        return ApiKeyUser(token), token
 
     def authenticate_header(self, request):
         return "ApiKey"

@@ -65,6 +65,10 @@ Check `requests.http` for sample requests.
 
 All write operations (POST, DELETE, etc.) require an `x-auth-token` matching `APP_AUTH_TOKEN` in the headers. All `GET` requests (including accessing the interactive GraphQL playground and REST/Swagger documentation) are open and do not require authentication.
 
+## Rate Limiting
+To prevent API abuse and secure system resources, the REST API enforces rate limiting (throttling):
+- **Unauthenticated Requests (GET)**: Limited to `60 requests per minute` per client IP address.
+- **Authenticated Requests (POST, DELETE, etc.)**: Limited to `1000 requests per minute` per API client.
 
 ## GraphQL
 - Available at `/graphql` (GraphiQL enabled).
