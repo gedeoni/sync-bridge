@@ -93,3 +93,11 @@ To run the automated tests inside an isolated, in-memory test database, execute:
 ```bash
 uv run python manage.py test
 ```
+
+## Pre-commit Hook
+The repository includes a Git pre-commit hook that automatically runs Ruff linting, formatting checks, and the full unit test suite before every commit:
+- If any check fails, the commit is aborted.
+- To set up or verify the hook locally:
+  ```bash
+  chmod +x .git/hooks/pre-commit
+  ```
