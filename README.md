@@ -50,6 +50,8 @@ Sync Bridge is a robust data synchronization service built with Django. It serve
    ```
 
 ## Endpoints
+Check `requests.http` for sample requests.
+
 - `GET /api/docs/` — Swagger UI API documentation (interactive)
 - `GET /api/redoc/` — ReDoc API documentation (clean alternative)
 - `GET /api/schema/` — OpenAPI 3.0 schema (JSON download)
@@ -62,6 +64,7 @@ Sync Bridge is a robust data synchronization service built with Django. It serve
 - `DELETE /api/v1/sync-history/:id` — delete history entry
 
 All write operations (POST, DELETE, etc.) require an `x-auth-token` matching `APP_AUTH_TOKEN` in the headers. All `GET` requests (including accessing the interactive GraphQL playground and REST/Swagger documentation) are open and do not require authentication.
+
 
 ## GraphQL
 - Available at `/graphql` (GraphiQL enabled).
