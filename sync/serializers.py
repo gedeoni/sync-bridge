@@ -1,12 +1,14 @@
 import re
 from decimal import Decimal
 from rest_framework import serializers
+from drf_spectacular.utils import PolymorphicProxySerializer
 from .models import Customer, Product, Order, OrderItem, Employee
 
 
 class SyncRequestSerializer(serializers.Serializer):
     model = serializers.ChoiceField(choices=['customers', 'products', 'orders', 'employees'])
     data = serializers.ListField(child=serializers.DictField(), allow_empty=False)
+
 
 
 class CustomerSyncSerializer(serializers.ModelSerializer):
@@ -116,3 +118,23 @@ class EmployeeSyncSerializer(serializers.ModelSerializer):
             return int(value)
         except (ValueError, TypeError) as exc:
             raise serializers.ValidationError('Employee id must be numeric when provided') from exc
+
+
+class CustomerSyncRequestSerializer(serializers.Serializer):
+    model = serializers.ChoiceField(choices=['customers'])
+    data = CustomerSyncSerializer(many=True)
+
+
+class ProductSyncRequestSerializer(serializers.Serializer):
+    model = serializers.ChoiceField(choices=['products'])
+    data = ProductSyncSerializer(many=True)
+
+
+class OrderSyncRequestSerializer(serializers.Serializer):
+    model = serializers.ChoiceField(choices=['orders'])
+    data = OrderSyncSerializer(many=True)
+
+
+class EmployeeSyncRequestSerializer(serializers.Serializer):
+    model = serializers.ChoiceField(choices=['employees'])
+    data = EmployeeSyncSerializer(many=True)
