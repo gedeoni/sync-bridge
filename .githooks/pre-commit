@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Pre-commit hook to run Ruff checks and Django unit tests on staged files
+
+echo "Executing pre-commit checks..."
+
+# Get all staged Python files (excluding deleted files)
+STAGED_PY_FILES=$(git diff --name-only --cached --diff-filter=d | grep '\.py$')
+
+if [ -n "$STAGED_PY_FILES" ]; then
+    echo "Staged Python files detected:"
+    echo "$STAGED_PY_FILES"
+    echo ""
+
+    # 1. Run Ruff Lint Check
+    echo "Running Ruff lint checks on staged files..."
+    echo "$STAGED_PY_FILES" | xargs uv run ruff check
+    if [ $? -ne 0 ]; then
+        echo "❌ Ruff lint check failed. Aborting commit."
+        exit 1
+    fi
+
+    # 2. Run Ruff Format Check
+    echo "Running Ruff formatting checks on staged files..."
+    echo "$STAGED_PY_FILES" | xargs uv run ruff format --check
+    if [ $? -ne 0 ]; then
+        echo "❌ Ruff formatting check failed. Run 'uv run ruff format <file>' to format. Aborting commit."
+        exit 1
+    fi
+
+    # 3. Run Automated Tests
+    echo "Running automated Django tests..."
+    export APP_AUTH_TOKEN='pre-commit-secret-token'
+    export SECRET_KEY='pre-commit-secret-key-for-testing'
+
+    uv run python manage.py test
+    if [ $? -ne 0 ]; then
+        echo "❌ Django unit tests failed. Aborting commit."
+        exit 1
+    fi
+else
+    echo "No staged Python files detected. Skipping Ruff and test checks."
+fi
+
+echo "✅ All checks passed! Proceeding with commit."
+exit 0

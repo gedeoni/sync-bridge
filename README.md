@@ -95,9 +95,16 @@ uv run python manage.py test
 ```
 
 ## Pre-commit Hook
-The repository includes a Git pre-commit hook that automatically runs Ruff linting, formatting checks, and the full unit test suite before every commit:
-- If any check fails, the commit is aborted.
-- To set up or verify the hook locally:
-  ```bash
-  chmod +x .git/hooks/pre-commit
-  ```
+The repository includes a tracked Git pre-commit hook located in `.githooks/pre-commit` that automatically runs checks before every commit:
+- **Scope**: To save time, it only runs Ruff linting and formatting checks on files that are **currently staged** for the commit.
+- **Auto-tests**: If staged Python files are detected, it automatically executes the full Django unit test suite.
+- **Safety**: If any check fails, the commit is aborted.
+
+To enable the hook locally in your cloned repository, run:
+```bash
+# Make the hook executable
+chmod +x .githooks/pre-commit
+
+# Configure git to use our tracked hooks directory
+git config core.hooksPath .githooks
+```
