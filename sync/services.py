@@ -54,33 +54,43 @@ def sync_payload(model: str, data: list[dict]) -> dict:
 def _process_sync_data(
     data: list[dict], model_name: str, ModelClass: type[models.Model], SerializerClass: type[serializers.ModelSerializer]
 ) -> list[dict[str, Any]]:
-    results: list[dict[str, Any]] = []
-    for item_data in data:
-        instance = None
-        item_id = item_data.get('id')
-
-        # The Employee serializer handles string IDs, but we need an int for the DB query
-        if model_name == 'employees' and item_id is not None:
-            try:
-                item_id = int(item_id)
-            except (ValueError, TypeError):
-                # Let the serializer's validation catch the invalid ID format
-                pass
-
+    # 1. Gather all unique IDs from the incoming payload
+    item_ids = []
+    for item in data:
+        item_id = item.get('id')
         if item_id is not None:
-            try:
-                instance = ModelClass.objects.get(id=item_id)
-            except ModelClass.DoesNotExist:
-                # This is fine, it will be treated as a create operation,
-                # mimicking update_or_create behavior.
-                pass
+            if model_name == 'employees':
+                try:
+                    item_id = int(item_id)
+                except (ValueError, TypeError):
+                    continue
+            item_ids.append(item_id)
 
-        serializer = SerializerClass(instance=instance, data=item_data)
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.save()
+    # 2. Fetch all matching existing instances in a single DB query
+    existing_instances = {}
+    if item_ids:
+        existing_qs = ModelClass.objects.filter(id__in=item_ids)
+        existing_instances = {obj.id: obj for obj in existing_qs}
 
-        status = 'updated' if instance else 'created'
-        results.append({'id': obj.id, 'status': status})
+    # 3. Process each record inside an atomic transaction (in-memory lookup)
+    results: list[dict[str, Any]] = []
+    with transaction.atomic():
+        for item_data in data:
+            item_id = item_data.get('id')
+            if model_name == 'employees' and item_id is not None:
+                try:
+                    item_id = int(item_id)
+                except (ValueError, TypeError):
+                    pass
+
+            instance = existing_instances.get(item_id) if item_id is not None else None
+
+            serializer = SerializerClass(instance=instance, data=item_data)
+            serializer.is_valid(raise_exception=True)
+            obj = serializer.save()
+
+            status = 'updated' if instance else 'created'
+            results.append({'id': obj.id, 'status': status})
     return results
 
 

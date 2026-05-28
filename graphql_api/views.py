@@ -1,3 +1,4 @@
+import secrets
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,7 +12,7 @@ async def graphql_view(request, *args, **kwargs):
     if request.method != 'GET':
         token = request.headers.get('x-auth-token') or request.headers.get('X-Auth-Token')
         expected = settings.APP_AUTH_TOKEN
-        if not expected or token != expected:
+        if not expected or not secrets.compare_digest(token or '', expected):
             payload = response_with_status(401, 'Access Denied')
             return JsonResponse(payload, status=401)
 

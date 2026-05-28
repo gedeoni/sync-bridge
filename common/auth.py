@@ -1,3 +1,4 @@
+import secrets
 from typing import Optional, Tuple
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
@@ -13,7 +14,7 @@ class ApiKeyAuthentication(BaseAuthentication):
         token = request.headers.get('x-auth-token') or request.headers.get('X-Auth-Token')
         expected = settings.APP_AUTH_TOKEN
 
-        if not expected or token != expected:
+        if not expected or not secrets.compare_digest(token or '', expected):
             raise AuthenticationFailed({'status': 401, 'message': 'Access Denied'})
 
         return AnonymousUser(), token

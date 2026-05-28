@@ -3,8 +3,13 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production')
 DEBUG = os.getenv('DEBUG', 'true').lower() == 'true'
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ValueError("SECRET_KEY environment variable is required in production settings!")
+    SECRET_KEY = 'change-me-in-production-dev-only'
 
 ALLOWED_HOSTS = [host for host in os.getenv('ALLOWED_HOSTS', '*').split(',') if host]
 
