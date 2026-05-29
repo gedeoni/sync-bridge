@@ -1,6 +1,10 @@
 server:
   port: ${APP_PORT:3000}
 
+# # Sets the prefix for all REST controller mappings
+# spring.mvc.servlet.path=/api/v1
+
+
 spring:
   application:
     name: ${APP_NAME:sync-bridge-spring}
@@ -25,6 +29,9 @@ spring:
     path: /graphql
     websocket:
       path: /graphql
+  mvc:
+    servlet:
+      path: /api/v1
 
 management:
   endpoints:

@@ -21,7 +21,7 @@ import com.syncbridge.repository.SyncHistoryRepository;
 import com.syncbridge.util.ResponseUtil;
 
 @RestController
-@RequestMapping("/api/v1/sync-history")
+@RequestMapping("/sync-history")
 public class SyncHistoryController {
     private final SyncHistoryRepository repository;
 

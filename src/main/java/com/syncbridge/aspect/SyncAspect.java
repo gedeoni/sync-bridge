@@ -24,11 +24,11 @@ import io.micrometer.core.instrument.Timer;
 /**
  * Generic instrumentation aspect for any method marked with @Monitored.
  * Automatically captures latency, error rates, and structured logs.
- * 
+ *
  * Example:
  * @Monitored(name = "sync_op", tags = {"model"})
  * public void sync(String model, List<Map> data) { ... }
- * 
+ *
  * Generates metrics:
  * - sync_op.duration (latency with percentiles)
  * - sync_op.total (throughput counter with status tag)

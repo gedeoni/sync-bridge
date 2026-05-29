@@ -15,7 +15,7 @@ import com.syncbridge.entity.ApiResponse;
 import com.syncbridge.service.SyncService;
 
 @RestController
-@RequestMapping("/api/v1/sync")
+@RequestMapping("/sync")
 public class SyncController {
 
     @Autowired

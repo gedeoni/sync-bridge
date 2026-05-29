@@ -39,6 +39,21 @@ Auth
 - **H2 console:** `http://localhost:3000/h2-console` (JDBC URL `jdbc:h2:mem:syncdb`)
 - **Actuator metrics:** `http://localhost:3000/actuator/prometheus`
 
+**CI/CD & Pre-commit Hooks**
+- **Continuous Integration:** A GitHub Actions workflow (`.github/workflows/java-ci.yml`) runs on every push and pull request to verify that the code compiles, lints successfully with **Checkstyle**, and passes all tests.
+- **Local Pre-commit Hook:** A Git pre-commit hook is provided in `.githooks/pre-commit` to catch linting (Checkstyle) issues and failing tests locally before they are committed. 
+  - **Auto-installation:** The hook is automatically installed to `.git/hooks/` via the `git-build-hook-maven-plugin` whenever you run any Maven command (e.g., `mvn initialize` or `mvn compile`).
+  - **Making it Executable:** Unix-based systems (like macOS or Linux) require hook scripts to be executable. Ensure the hook is configured properly by running the following commands in the root of the project:
+    ```bash
+    # Set the execute bit on both the template and the installed hook
+    chmod +x .githooks/pre-commit
+    chmod +x .git/hooks/pre-commit
+
+    # Tell Git to track the file as executable in the repository (so it works out-of-the-box for other devs)
+    git update-index --chmod=+x .githooks/pre-commit
+    ```
+
+
 **Recommended build change (parameter names)**
 - To allow the `@Monitored(tags={"paramName"})` aspect to extract parameter names reliably, compile with parameter metadata. Add this to your `pom.xml` under `maven-compiler-plugin` configuration:
 
@@ -64,6 +79,8 @@ Auth
 - **Sync:** `POST /api/v1/sync` — payload: `{ "model": "customers|products|orders|employees", "data": [ ... ] }`
 - **Sync stats:** `GET /api/v1/sync/stats`
 - **Sync history:** `GET /api/v1/sync-history`, `GET /api/v1/sync-history/{id}`, `POST /api/v1/sync-history/retry/{id}`, `DELETE /api/v1/sync-history/{id}`
+- **Swagger UI:** `GET /api/v1/swagger-ui/index.html` — interactive API docs (public, no auth required)
+- **OpenAPI spec:** `GET /api/v1/v3/api-docs` (JSON), `GET /api/v1/v3/api-docs.yaml` (YAML)
 
 **Example curl (create customer)**
 ```bash

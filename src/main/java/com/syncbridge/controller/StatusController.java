@@ -1,16 +1,17 @@
 package com.syncbridge.controller;
 
-import com.syncbridge.service.HealthService;
-import com.syncbridge.util.ResponseUtil;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import com.syncbridge.service.HealthService;
+import com.syncbridge.util.ResponseUtil;
 
 @RestController
-@RequestMapping("/api/v1/healthz")
+@RequestMapping("/healthz")
 public class StatusController {
     private final HealthService healthService;
 
