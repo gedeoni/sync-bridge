@@ -27,7 +27,13 @@ import { GraphqlModule } from './graphql/graphql.module';
         type: 'sqlite',
         database: config.get<string>('DB_PATH', 'sync-bridge.db'),
         entities: [Customer, Product, Order, OrderItem, Employee, SyncHistory],
-        synchronize: true,
+        synchronize: config.get<string>('NODE_ENV') === 'development',
+        migrations: [
+          config.get<string>('NODE_ENV') === 'development'
+            ? 'src/migrations/*.ts'
+            : 'dist/migrations/*.js',
+        ],
+        migrationsRun: config.get<string>('NODE_ENV') !== 'development',
       }),
     }),
     SyncModule,

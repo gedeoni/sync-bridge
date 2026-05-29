@@ -25,6 +25,8 @@ NestJS implementation of the Sync Bridge API mirrored from the Spring Boot versi
 4. Call endpoints with the `x-auth-token` header set to `APP_AUTH_TOKEN` (health is public).
 
 ## Endpoints
+- `GET /docs` — Interactive Swagger API documentation UI (no auth)
+- `GET /docs-json` — OpenAPI JSON specification document (no auth)
 - `GET /api/v1/healthz` — health + DB read/write probe (no auth)
 - `POST /api/v1/sync` — body `{ model: customers|products|orders|employees, data: [...] }`
 - `GET /api/v1/sync/stats` — aggregate sync history counts
@@ -50,7 +52,55 @@ NestJS implementation of the Sync Bridge API mirrored from the Spring Boot versi
   - Subscription `employeeCreated` (graphql-ws) emits on creation
 - Uses same auth header (`x-auth-token`) via the global guard.
 
+## Database Migrations
+
+This project uses TypeORM CLI for database schema migrations.
+
+### Generating Migrations
+If you modify any entity schema, generate a new migration with:
+```bash
+npm run build
+npm run migration:generate -- src/migrations/YourMigrationName
+```
+
+### Running Migrations
+To execute all pending migrations on your database:
+```bash
+npm run migration:run
+```
+
+### Reverting Migrations
+To undo the last executed migration:
+```bash
+npm run migration:revert
+```
+
+*Note: In non-development environments, pending migrations are automatically executed on application startup.*
+
+## Testing
+
+This project includes a comprehensive test suite covering unit tests and end-to-end (E2E) HTTP integration tests.
+
+### Running Unit Tests
+Execute unit tests for all controllers and services (with isolated repository mocks):
+```bash
+npm run test
+```
+
+### Running E2E Tests
+Execute E2E integration tests (runs `supertest` requests against an isolated local SQLite test database which is cleaned up after testing):
+```bash
+npm run test:e2e
+```
+
+### Generating Coverage Reports
+Run tests and generate complete HTML/text coverage reports:
+```bash
+npm run test:cov
+```
+
 ## Configuration
 - `APP_AUTH_TOKEN` — required for all routes except health.
 - `DB_PATH` — SQLite file path (default `sync-bridge.db`).
 - `PORT` — server port (default `3000`).
+- `NODE_ENV` — environment mode (`development` enables schema auto-synchronization; other values like `production` disable it and enforce migrations).

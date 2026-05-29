@@ -46,6 +46,7 @@ export class ApiKeyAuthGuard implements CanActivate {
     if (context.getType().toString() === 'graphql') {
       const gqlCtx = GqlExecutionContext.create(context);
       const ctx = gqlCtx.getContext<{ req?: Request; headers?: Record<string, string>; connectionParams?: Record<string, string> }>();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return ctx?.req || (ctx as any)?.request || ({ headers: ctx?.headers ?? (ctx as any)?.connectionParams } as any);
     }
 

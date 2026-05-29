@@ -24,7 +24,7 @@ export class MonitoredInterceptor implements NestInterceptor {
     private readonly metrics: MetricsService,
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const options = this.reflector.getAllAndOverride<MonitoredOptions | undefined>(
       MONITORED_METADATA,
       [context.getHandler(), context.getClass()],
@@ -97,6 +97,7 @@ export class MonitoredInterceptor implements NestInterceptor {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private extractTags(req: any, tagNames: string[], context: ExecutionContext) {
     const tags: Record<string, string> = {};
     if (!tagNames.length) return tags;
@@ -120,6 +121,7 @@ export class MonitoredInterceptor implements NestInterceptor {
     return tags;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private ensureRequestId(req: any) {
     const existing = req?.headers?.['x-request-id'];
     const id = existing || randomUUID();

@@ -99,8 +99,10 @@ export class SyncService {
         const entity = config.map(dto);
         const saved = await config.repo.save(entity);
 
-        const id = (saved as any).id ?? null;
-        results.push({ id, status: (dto as any).id ? 'updated' : 'created' });
+        const savedRecord = saved as Record<string, unknown>;
+        const dtoRecord = dto as Record<string, unknown>;
+        const id = (savedRecord.id as number | string | null) ?? null;
+        results.push({ id, status: dtoRecord.id ? 'updated' : 'created' });
       }
 
       await this.syncHistoryRepo.save({

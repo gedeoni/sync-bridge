@@ -42,13 +42,13 @@ export class EmployeeResolver {
   }
 
   @Query(() => Employee, { nullable: true })
-  @Monitored({ name: 'graphql.employee', tags: ['id'] })
+  @Monitored({ name: 'graphql.employee' })
   async employee(@Args('id', { type: () => Int }) id: number) {
     return this.employeeRepo.findOne({ where: { id } });
   }
 
   @Query(() => [Employee])
-  @Monitored({ name: 'graphql.search_employees', tags: ['search'] })
+  @Monitored({ name: 'graphql.search_employees' })
   async searchEmployees(
     @Args('search', { type: () => String }) search: string,
     @Args('offset', { type: () => Int, nullable: true }) offset = 0,
@@ -66,6 +66,7 @@ export class EmployeeResolver {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   @Monitored({ name: 'graphql.create_employee' })
   async createEmployee(@Args('data') data: CreateEmployeeInput) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const entity = this.employeeRepo.create(data as any);
     const saved = await this.employeeRepo.save(entity);
     await this.pubSub.publish('EMPLOYEE_CREATED', saved);

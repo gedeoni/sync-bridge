@@ -4,11 +4,9 @@ import {
   ConflictException,
   ExceptionFilter,
   HttpException,
-  HttpStatus,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { GqlArgumentsHost } from '@nestjs/graphql';
 import { Response } from 'express';
 import { QueryFailedError } from 'typeorm';
 import { responseWithStatus } from '../utils/response.util';
@@ -20,7 +18,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const contextType = host.getType<string>();
     if (contextType === 'graphql') {
-      return this.handleGraphql(exception, host);
+      return this.handleGraphql(exception);
     }
 
     const ctx = host.switchToHttp();
@@ -29,14 +27,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const res = exception.getResponse();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const resObj = res as any;
       const payload =
         typeof res === 'string'
           ? responseWithStatus(status, res)
           : responseWithStatus(
-              (res as any).status || status,
-              (res as any).message || exception.message,
-              (res as any).data,
-              (res as any).errors,
+              resObj.status || status,
+              resObj.message || exception.message,
+              resObj.data,
+              resObj.errors,
             );
       return response.status(payload.status).json(payload);
     }
@@ -52,7 +52,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return response.status(payload.status).json(payload);
   }
 
-  private handleGraphql(exception: unknown, host: ArgumentsHost) {
+  private handleGraphql(exception: unknown) {
     if (exception instanceof HttpException) {
       return exception;
     }

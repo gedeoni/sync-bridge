@@ -12,16 +12,36 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Expose, Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export type SyncModel = 'customers' | 'products' | 'orders' | 'employees';
 
 export abstract class BaseSyncDto {}
 
 export class SyncRequestDto {
+  @ApiProperty({
+    description: 'The model type to sync',
+    enum: ['customers', 'products', 'orders', 'employees'],
+    example: 'customers',
+  })
   @IsNotEmpty()
   @Matches(/^(customers|products|orders|employees)$/)
   model!: SyncModel;
 
+  @ApiProperty({
+    description: 'Array of records to insert or update',
+    type: 'array',
+    items: {
+      type: 'object',
+    },
+    example: [
+      {
+        email: 'john.doe@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+      }
+    ],
+  })
   @IsArray()
   @ArrayMinSize(1)
   data!: Record<string, unknown>[];

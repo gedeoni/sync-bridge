@@ -3,8 +3,9 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 @InputType()
 export class CreateEmployeeInput {
-  @Field(() => Int)
-  id!: number;
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  id?: number;
 
   @Field()
   @IsString()
