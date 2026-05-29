@@ -99,6 +99,21 @@ Run tests and generate complete HTML/text coverage reports:
 npm run test:cov
 ```
 
+### Pre-Commit Hooks
+This project uses **Husky** and **lint-staged** to enforce code quality locally before code is committed:
+- **Automatic Execution**: Runs automatically whenever you execute `git commit`.
+- **Targeted Linting**: Runs `eslint --fix` **only on staged files** to keep check-ins fast and prevent blockages on pre-existing errors.
+- **Safety Gate**: Runs all unit tests and E2E tests, blocking the commit if any checks or tests fail.
+- *Note: To temporarily bypass hooks (e.g., for draft commits), add `--no-verify`: `git commit -m "wip" --no-verify`.*
+
+### Continuous Integration (CI)
+An automated GitHub Actions CI workflow is configured in [.github/workflows/ci.yml](file:///.github/workflows/ci.yml) to validate code health on the server.
+On every `push` or `pull_request` targeting `main`, the CI runner:
+1. Performs a clean installation of dependencies via `npm ci`.
+2. Verifies code style via `npm run lint`.
+3. Validates successful compilation via `npm run build`.
+4. Executes unit tests (`npm run test`) and integration tests (`npm run test:e2e`).
+
 ## Configuration
 - `APP_AUTH_TOKEN` — required for all routes except health.
 - `DB_PATH` — SQLite file path (default `sync-bridge.db`).
