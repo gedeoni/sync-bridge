@@ -17,10 +17,10 @@ import com.syncbridge.dto.SyncDtos;
 import com.syncbridge.entity.Customer;
 import com.syncbridge.entity.Employee;
 import com.syncbridge.entity.Order;
-import com.syncbridge.entity.OrderItem;
 import com.syncbridge.entity.Product;
 import com.syncbridge.entity.SyncHistory;
 import com.syncbridge.entity.SyncStatus;
+import com.syncbridge.entity.SyncableEntity;
 import com.syncbridge.mapper.SyncMapper;
 import com.syncbridge.repository.CustomerRepository;
 import com.syncbridge.repository.EmployeeRepository;
@@ -43,6 +43,8 @@ public class SyncService {
     private OrderRepository orderRepository;
     @Autowired
     private SyncHistoryRepository syncHistoryRepository;
+    @Autowired
+    private SyncHistoryService syncHistoryService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -86,23 +88,21 @@ public class SyncService {
     @Monitored(name = "sync.operation", tags = {"model"})
     @SuppressWarnings("unchecked")
     public Map<String, Object> sync(String model, List<Map<String, Object>> data) {
-        SyncHistory syncHistory = new SyncHistory();
+        String payloadStr;
         try {
-            syncHistory.setPayload(objectMapper.writeValueAsString(data)); // Simplified payload storage
+            payloadStr = objectMapper.writeValueAsString(data);
         } catch (Exception e) {
-            syncHistory.setPayload("Error serializing payload");
+            payloadStr = "Error serializing payload";
         }
-        syncHistory.setStatus(SyncStatus.PENDING_RETRY);
-        syncHistory = syncHistoryRepository.save(syncHistory);
+
+        SyncHistory syncHistory = syncHistoryService.createPending(payloadStr);
 
         JpaRepository<Object, Object> repository = (JpaRepository<Object, Object>) repositories.get(model);
         Class<?> entityClass = entityClasses.get(model);
         Class<?> dtoClass = dtoClasses.get(model);
 
         if (repository == null || entityClass == null || dtoClass == null) {
-            syncHistory.setStatus(SyncStatus.INVALID);
-            syncHistory.setFailureReason("Invalid model: " + model);
-            syncHistoryRepository.save(syncHistory);
+            syncHistoryService.markInvalid(syncHistory.getId(), "Invalid model: " + model);
             throw new IllegalArgumentException("Invalid model: " + model);
         }
 
@@ -110,63 +110,52 @@ public class SyncService {
 
         try {
             for (Map<String, Object> itemData : data) {
-                Object id = itemData.get("id");
-
-                // First convert incoming map to the corresponding DTO, then to entity
-                Object dto = objectMapper.convertValue(itemData, dtoClass);
-                Function<Object, Object> mapperFn = mappers.get(model);
-                Object entity;
-                if (mapperFn != null) {
-                    entity = mapperFn.apply(dto);
-                } else {
-                    entity = objectMapper.convertValue(dto, entityClass);
-                }
-
-
-                if (model.equals("orders") && entity instanceof Order) {
-                    Order order = (Order) entity;
-                    if (order.getItems() != null) {
-                        for (OrderItem item : order.getItems()) {
-                            item.setOrder(order);
-                        }
-                    }
-                }
-
-                Object savedEntity = repository.save(entity);
-
-                // Extract ID from saved entity (assuming getId method exists or using
-                // reflection/casting)
-                // For simplicity, we'll use the ID from the input map if present, or try to get
-                // it from the saved entity
-                // Since we know the types, we can cast.
-                Long savedId = null;
-                switch (model) {
-                    case "employees" -> savedId = ((Employee) savedEntity).getId();
-                    case "customers" -> savedId = ((Customer) savedEntity).getId();
-                    case "products" -> savedId = ((Product) savedEntity).getId();
-                    case "orders" -> savedId = ((Order) savedEntity).getId();
-                }
-
-                Map<String, Object> result = new HashMap<>();
-                result.put("id", savedId);
-                result.put("status", id != null ? "updated" : "created"); // Simplified status logic
+                Map<String, Object> result = processItem(model, itemData, repository, entityClass, dtoClass);
                 results.add(result);
             }
 
-            syncHistory.setStatus(SyncStatus.SUCCESSFUL);
-            syncHistoryRepository.save(syncHistory);
+            repository.flush(); // Force Hibernate to execute SQL and catch database violations inside the try-catch block
+
+            syncHistoryService.markSuccess(syncHistory.getId());
 
             Map<String, Object> response = new HashMap<>();
             response.put("results", results);
             return response;
 
         } catch (Exception e) {
-            syncHistory.setStatus(SyncStatus.FAILED);
-            syncHistory.setFailureReason(e.getMessage());
-            syncHistoryRepository.save(syncHistory);
+            syncHistoryService.markFailed(syncHistory.getId(), e.getMessage());
             System.out.println("Exception type: " + e.getClass().getName());
             throw e;
         }
+    }
+
+    private Map<String, Object> processItem(String model, Map<String, Object> itemData,
+                                            JpaRepository<Object, Object> repository,
+                                            Class<?> entityClass, Class<?> dtoClass) {
+        Object id = itemData.get("id");
+
+        // Convert incoming map to corresponding DTO
+        Object dto = objectMapper.convertValue(itemData, dtoClass);
+        Function<Object, Object> mapperFn = mappers.get(model);
+        Object entity;
+        if (mapperFn != null) {
+            entity = mapperFn.apply(dto);
+        } else {
+            entity = objectMapper.convertValue(dto, entityClass);
+        }
+
+        Object savedEntity = repository.save(entity);
+
+        // Extract ID using the new SyncableEntity interface
+        Long savedId = null;
+        if (savedEntity instanceof SyncableEntity syncable) {
+            savedId = syncable.getId();
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", savedId);
+        result.put("status", id != null ? "updated" : "created");
+        return result;
     }
 
     public Map<String, Object> getStats() {

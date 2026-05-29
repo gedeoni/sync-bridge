@@ -22,7 +22,7 @@ public class WebConfig {
     public FilterRegistrationBean<AuthFilter> authFilter(@org.springframework.beans.factory.annotation.Value("${app.auth-token}") String token) {
         FilterRegistrationBean<AuthFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new AuthFilter(token));
-        registrationBean.addUrlPatterns("/api/v1/sync/*", "/api/v1/sync-history/*", "/api/v1/sync");
+        registrationBean.addUrlPatterns("/api/v1/sync/*", "/api/v1/sync-history/*", "/api/v1/sync-history", "/api/v1/sync", "/graphql");
         registrationBean.setOrder(2);
         return registrationBean;
     }

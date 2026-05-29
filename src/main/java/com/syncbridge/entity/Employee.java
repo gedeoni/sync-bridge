@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "employees")
-public class Employee {
+public class Employee implements SyncableEntity {
     @Id
     @Column(length = 100)
     private Long id;

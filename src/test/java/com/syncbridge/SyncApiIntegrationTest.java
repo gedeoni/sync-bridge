@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,7 @@ class SyncApiIntegrationTest {
     @Autowired ObjectMapper objectMapper;
     @Autowired CustomerRepository customerRepository;
     @Autowired SyncHistoryRepository syncHistoryRepository;
+    @Autowired jakarta.persistence.EntityManager entityManager;
 
     // =========================================================================
     // Auth
@@ -80,6 +82,29 @@ class SyncApiIntegrationTest {
                            .contentType(MediaType.APPLICATION_JSON)
                            .content("{}"))
                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GET /sync-history base URL without token returns 401")
+        void syncHistoryBaseWithoutTokenReturns401() throws Exception {
+            mockMvc.perform(get(SP + "/sync-history").servletPath(SP))
+                   .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GET /sync-history base URL with wrong token returns 401")
+        void syncHistoryBaseWithWrongTokenReturns401() throws Exception {
+            mockMvc.perform(get(SP + "/sync-history").servletPath(SP)
+                           .header(AUTH, "wrong-token"))
+                   .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GET /sync-history base URL with correct token returns 200")
+        void syncHistoryBaseWithCorrectTokenReturns200() throws Exception {
+            mockMvc.perform(get(SP + "/sync-history").servletPath(SP)
+                           .header(AUTH, TOKEN))
+                   .andExpect(status().isOk());
         }
     }
 
@@ -375,6 +400,144 @@ class SyncApiIntegrationTest {
                    .andExpect(status().isNoContent());
 
             assertThat(syncHistoryRepository.findById(id)).isEmpty();
+        }
+
+        @Test
+        @Transactional(propagation = Propagation.NOT_SUPPORTED)
+        @DisplayName("failed sync transaction rolls back database changes but preserves SyncHistory with FAILED status")
+        void failedSyncRollsBackDataButSavesHistory() throws Exception {
+            syncHistoryRepository.deleteAll();
+
+            // We attempt to sync a customer. But we make the lastName null (which is @Column(nullable = false) in Customer entity).
+            // This will throw a DataIntegrityViolationException during repository.save(entity)!
+            String body = """
+                    {
+                      "model": "customers",
+                      "data": [
+                        { "email": "fail_tx@example.com", "first_name": "FailTx" }
+                      ]
+                    }
+                    """;
+
+            mockMvc.perform(post(SP + "/sync").servletPath(SP)
+                           .header(AUTH, TOKEN)
+                           .contentType(MediaType.APPLICATION_JSON)
+                           .content(body))
+                   .andExpect(status().isConflict());
+
+            // The customer should NOT be in database because transaction rolled back!
+            assertThat(customerRepository.count()).isEqualTo(0);
+
+            // Clear Hibernate cache to force select from the database
+            entityManager.clear();
+
+            // But the SyncHistory record should BE in the database with status FAILED!
+            java.util.List<com.syncbridge.entity.SyncHistory> histories = syncHistoryRepository.findAll();
+            assertThat(histories)
+                    .hasSize(1)
+                    .anyMatch(sh -> sh.getStatus().getValue().equals("failed"));
+        }
+    }
+
+    // =========================================================================
+    // GraphQL Security
+    // =========================================================================
+
+    @Nested
+    @DisplayName("GraphQL Security")
+    class GraphqlSecurityTests {
+
+        @Test
+        @DisplayName("GraphQL: public query hello returns 200")
+        void helloIsPublic() throws Exception {
+            String query = "{\"query\": \"query { hello }\"}";
+            mockMvc.perform(post("/graphql")
+                           .contentType(MediaType.APPLICATION_JSON)
+                           .content(query))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.data.hello").value("Hello from Sync Bridge"));
+        }
+
+        @Test
+        @DisplayName("GraphQL: public query employees returns 200 without token")
+        void employeesQueryIsPublic() throws Exception {
+            String query = "{\"query\": \"query { employees(limit: 2, offset: 0) { id firstName lastName } }\"}";
+            mockMvc.perform(post("/graphql")
+                           .contentType(MediaType.APPLICATION_JSON)
+                           .content(query))
+                   .andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("GraphQL: createEmployee mutation without token returns 401")
+        void createEmployeeWithoutTokenReturns401() throws Exception {
+            String query = """
+                    {
+                      "query": "mutation($data: CreateEmployeeInput!) { createEmployee(data: $data) { id firstName } }",
+                      "variables": {
+                        "data": {
+                          "id": 999,
+                          "employeeId": "E999",
+                          "firstName": "Jane",
+                          "lastName": "Doe",
+                          "email": "jane.doe@example.com"
+                        }
+                      }
+                    }
+                    """;
+            mockMvc.perform(post("/graphql")
+                           .contentType(MediaType.APPLICATION_JSON)
+                           .content(query))
+                   .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GraphQL: createEmployee mutation with wrong token returns 401")
+        void createEmployeeWithWrongTokenReturns401() throws Exception {
+            String query = """
+                    {
+                      "query": "mutation($data: CreateEmployeeInput!) { createEmployee(data: $data) { id firstName } }",
+                      "variables": {
+                        "data": {
+                          "id": 999,
+                          "employeeId": "E999",
+                          "firstName": "Jane",
+                          "lastName": "Doe",
+                          "email": "jane.doe@example.com"
+                        }
+                      }
+                    }
+                    """;
+            mockMvc.perform(post("/graphql")
+                           .header("x-auth-token", "wrong-token")
+                           .contentType(MediaType.APPLICATION_JSON)
+                           .content(query))
+                   .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("GraphQL: createEmployee mutation with correct token returns 200")
+        void createEmployeeWithCorrectTokenReturns200() throws Exception {
+            String query = """
+                    {
+                      "query": "mutation($data: CreateEmployeeInput!) { createEmployee(data: $data) { id firstName } }",
+                      "variables": {
+                        "data": {
+                          "id": 999,
+                          "employeeId": "E999",
+                          "firstName": "Jane",
+                          "lastName": "Doe",
+                          "email": "jane.doe@example.com"
+                        }
+                      }
+                    }
+                    """;
+            mockMvc.perform(post("/graphql")
+                           .header("x-auth-token", TOKEN)
+                           .contentType(MediaType.APPLICATION_JSON)
+                           .content(query))
+                   .andExpect(status().isOk())
+                   .andExpect(jsonPath("$.data.createEmployee.id").value(999));
         }
     }
 }

@@ -15,7 +15,7 @@ import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "customers")
-public class Customer {
+public class Customer implements SyncableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

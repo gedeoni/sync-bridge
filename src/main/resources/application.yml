@@ -47,5 +47,4 @@ management:
         sync.operation.duration: true
 
 app:
-  # auth-token: ${AUTHORIZATION_KEY:dev-secret}
-  auth-token: your-secret-auth-key
+  auth-token: ${AUTHORIZATION_KEY:your-secret-auth-key}

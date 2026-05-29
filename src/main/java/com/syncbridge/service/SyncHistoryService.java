@@ -1,67 +1,58 @@
 package com.syncbridge.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syncbridge.entity.SyncHistory;
 import com.syncbridge.entity.SyncStatus;
 import com.syncbridge.repository.SyncHistoryRepository;
 
 @Service
 public class SyncHistoryService {
-    private final SyncHistoryRepository repository;
-    private final ObjectMapper mapper = new ObjectMapper();
 
-    public SyncHistoryService(SyncHistoryRepository repository) {
-        this.repository = repository;
-    }
+    @Autowired
+    private SyncHistoryRepository repository;
 
-    @Transactional
-    public SyncHistory createPending(Object payload) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public SyncHistory createPending(String payload) {
         SyncHistory sh = new SyncHistory();
-        try {
-            sh.setPayload(mapper.writeValueAsString(payload));
-        } catch (Exception e) {
-            sh.setPayload("{}");
-        }
+        sh.setPayload(payload);
         sh.setStatus(SyncStatus.PENDING_RETRY);
         return repository.save(sh);
     }
 
-    @Transactional
-    public void markSuccess(SyncHistory sh) {
-        sh.setStatus(SyncStatus.SUCCESSFUL);
-        repository.save(sh);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markSuccess(Long id) {
+        repository.findById(id).ifPresent(sh -> {
+            sh.setStatus(SyncStatus.SUCCESSFUL);
+            repository.save(sh);
+        });
     }
 
-    @Transactional
-    public void markFailure(SyncHistory sh, String reason) {
-        sh.setStatus(SyncStatus.FAILED);
-        sh.setFailureReason(reason);
-        repository.save(sh);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markFailed(Long id, String reason) {
+        repository.findById(id).ifPresentOrElse(sh -> {
+            sh.setStatus(SyncStatus.FAILED);
+            sh.setFailureReason(truncate(reason));
+            repository.save(sh);
+        }, () -> {
+            System.out.println("DEBUG: markFailed DID NOT find SyncHistory with ID=" + id);
+        });
     }
 
-    public Map<String, Integer> aggregateStats() {
-        List<Object[]> raw = repository.countByStatus();
-        Map<String, Integer> stats = new HashMap<>();
-        stats.put("successful", 0);
-        stats.put("failed", 0);
-        stats.put("invalid", 0);
-        stats.put("pending_retry", 0);
-        int total = 0;
-        for (Object[] row : raw) {
-            String status = String.valueOf(row[0]);
-            int cnt = ((Number) row[1]).intValue();
-            stats.put(status, cnt);
-            total += cnt;
-        }
-        stats.put("total", total);
-        return stats;
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markInvalid(Long id, String reason) {
+        repository.findById(id).ifPresent(sh -> {
+            sh.setStatus(SyncStatus.INVALID);
+            sh.setFailureReason(truncate(reason));
+            repository.save(sh);
+        });
+    }
+
+    private String truncate(String val) {
+        if (val == null) return null;
+        return val.length() > 255 ? val.substring(0, 255) : val;
     }
 }
-
