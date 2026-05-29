@@ -1,30 +1,10 @@
-Sync Bridge Spring (Java)
+# Sync Bridge Spring (Java)
 
-Overview
-- Sync bridge API.
-- Uses H2 in-memory DB, Spring Data JPA, and validation.
-- Exposes the same endpoints and behavior under `/api/v1`.
-
-Endpoints
-- `GET /api/v1/healthz` — Health check with DB read/write checks.
-- `POST /api/v1/sync` — Sync payload for models: `customers|products|orders|employees`.
-- `GET /api/v1/sync/stats` — Aggregated SyncHistory counts.
-- `GET /api/v1/sync-history` — Paginated listing with optional `status`.
-- `GET /api/v1/sync-history/{id}` — Single sync history.
-- `POST /api/v1/sync-history/retry/{id}` — Retry failed sync -> pending_retry.
-- `DELETE /api/v1/sync-history/{id}` — Delete history record.
-
-Auth
-- Protected routes require `x-auth-token` header matching `app.auth-token` (see `application.yml`).
-- Health endpoint is public.
-
-**Sync Bridge Spring (Java)**
-
-**Overview**
-- **Purpose:** Spring Boot implementation of an API allowing data transfer between databases
+## Overview
+- **Purpose:** Spring Boot implementation of an API allowing data transfer between databases.
 - **Stack:** Spring Boot, Spring Data JPA (Hibernate), H2 (default), Jackson, Micrometer, Logback (JSON encoder).
 
-**What's New / Improvements**
+## What's New / Improvements
 - **DTO-first mapping:** Incoming snake_case JSON is mapped to strongly-typed DTOs (`src/main/java/com/syncbridge/dto/SyncDtos.java`) using `@JsonProperty` where needed.
 - **Centralized mapping:** `SyncMapper` converts DTOs to JPA entities (customers, products, orders, employees) with validation (e.g. order item amounts) in `src/main/java/com/syncbridge/mapper/SyncMapper.java`.
 - **Robust error handling:** `GlobalExceptionHandler` centralizes API errors, sanitizes DB constraint messages (avoids leaking SQL), and returns `409 Conflict` for unique-constraint violations with a concise field-level message.
@@ -32,14 +12,14 @@ Auth
 - **Metrics endpoint:** Prometheus-compatible metrics available at `/actuator/prometheus` (via Micrometer Prometheus registry).
 - **Sync history:** All sync attempts are recorded in `SyncHistory` with statuses (`PENDING_RETRY`, `SUCCESSFUL`, `FAILED`, `INVALID`).
 
-**Quick Start**
+## Quick Start
 - **Prerequisites:** JDK 17+, Maven.
 - **Build:** `mvn -DskipTests package`
 - **Run (dev):** `mvn spring-boot:run`
 - **H2 console:** `http://localhost:3000/h2-console` (JDBC URL `jdbc:h2:mem:syncdb`)
 - **Actuator metrics:** `http://localhost:3000/actuator/prometheus`
 
-**CI/CD & Pre-commit Hooks**
+## CI/CD & Pre-commit Hooks
 - **Continuous Integration:** A GitHub Actions workflow (`.github/workflows/java-ci.yml`) runs on every push and pull request to verify that the code compiles, lints successfully with **Checkstyle**, and passes all tests.
 - **Local Pre-commit Hook:** A Git pre-commit hook is provided in `.githooks/pre-commit` to catch linting (Checkstyle) issues and failing tests locally before they are committed. 
   - **Auto-installation:** The hook is automatically installed to `.git/hooks/` via the `git-build-hook-maven-plugin` whenever you run any Maven command (e.g., `mvn initialize` or `mvn compile`).
@@ -53,8 +33,7 @@ Auth
     git update-index --chmod=+x .githooks/pre-commit
     ```
 
-
-**Recommended build change (parameter names)**
+## Recommended build change (parameter names)
 - To allow the `@Monitored(tags={"paramName"})` aspect to extract parameter names reliably, compile with parameter metadata. Add this to your `pom.xml` under `maven-compiler-plugin` configuration:
 
 ```xml
@@ -65,7 +44,7 @@ Auth
 </configuration>
 ```
 
-**Important Files**
+## Important Files
 - **DTOs:** `src/main/java/com/syncbridge/dto/SyncDtos.java`
 - **Mapper:** `src/main/java/com/syncbridge/mapper/SyncMapper.java`
 - **Service:** `src/main/java/com/syncbridge/service/SyncService.java`
@@ -74,7 +53,14 @@ Auth
 - **Observability:** `src/main/java/com/syncbridge/annotation/Monitored.java` and `src/main/java/com/syncbridge/aspect/SyncAspect.java`
 - **Logging config:** `src/main/resources/logback-spring.xml`
 
-**Available Endpoints**
+## Available Endpoints & Auth
+- **Auth Rules**: 
+  - Protected routes require the `x-auth-token` header matching `app.auth-token` (defined in `application.yml`).
+  - The `/api/v1/healthz` endpoint is public and does not require authentication.
+- **Sample Calls**: 
+  - A [requests.http](file:///Users/gedeon/Projects/Sync%20bridge/sync-bridge-java/requests.http) file is included at the root of the project. You can use it to execute sample REST and GraphQL requests directly (compatible with VS Code's REST Client extension or IntelliJ's HTTP client).
+
+### Endpoint Reference
 - **Health:** `GET /api/v1/healthz`
 - **Sync:** `POST /api/v1/sync` — payload: `{ "model": "customers|products|orders|employees", "data": [ ... ] }`
 - **Sync stats:** `GET /api/v1/sync/stats`
@@ -82,7 +68,7 @@ Auth
 - **Swagger UI:** `GET /api/v1/swagger-ui/index.html` — interactive API docs (public, no auth required)
 - **OpenAPI spec:** `GET /api/v1/v3/api-docs` (JSON), `GET /api/v1/v3/api-docs.yaml` (YAML)
 
-**Example curl (create customer)**
+## Example curl (create customer)
 ```bash
 cat <<'JSON' > /tmp/customer.json
 {
@@ -95,24 +81,20 @@ JSON
 
 curl -i -X POST http://localhost:3000/api/v1/sync \
 	-H "Content-Type: application/json" \
+	-H "x-auth-token: your-secret-auth-key" \
 	--data @/tmp/customer.json
 ```
 
-**Error behavior**
+## Error behavior
 - **Unique constraint:** Attempts to insert a duplicate (e.g. customer email) result in `409 Conflict` with a sanitized message like `Duplicate entry: field 'EMAIL' already exists`.
 - **Internal errors:** Generic errors return `500 Internal Server Error`. If you see a `500` after adding `@Monitored`, see Troubleshooting below.
 
-**Troubleshooting**
+## Troubleshooting
 - **500 when using `@Monitored(tags = {"..."})`:**
 	- Cause: JVM may not retain parameter names at runtime by default, so the aspect's tag extraction can fail. Two fixes:
 		- Compile with `-parameters` (recommended) as shown above.
 		- Or avoid using `tags` by name and keep annotation without tags.
 - **Where to find logs:** Application logs are written in `logs/app.log` (configured via `logback-spring.xml`). Structured JSON logs include `requestId` for tracing.
 
-**Next steps / Suggestions**
-- Add integration tests for DTO→entity mapping and unique-constraint handling.
-- Optionally switch H2 to a persistent DB in `application.yml` for realistic testing.
-
-**License & Contributing**
+## License & Contributing
 - Small, focused project: fork, change, and open PRs. Keep changes minimal and focused.
-
