@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Pre-commit hook: lint staged Java files + run tests before every commit.
+# Installed automatically by the git-build-hook Maven plugin (see pom.xml).
+# To install manually: cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+echo -e "${BOLD}🔍 Pre-commit checks${NC}"
+
+# ── Only run if Java files are staged ─────────────────────────────────────────
+STAGED_JAVA=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.java$' || true)
+
+if [ -z "$STAGED_JAVA" ]; then
+    echo -e "${GREEN}✓ No Java files staged — skipping lint and tests.${NC}"
+    exit 0
+fi
+
+echo -e "\n${YELLOW}Staged Java files:${NC}"
+echo "$STAGED_JAVA" | sed 's/^/  /'
+
+# ── Lint (Checkstyle) ─────────────────────────────────────────────────────────
+echo -e "\n${YELLOW}🧹 Running Checkstyle...${NC}"
+if mvn --batch-mode --quiet checkstyle:check 2>&1; then
+    echo -e "${GREEN}✓ Checkstyle passed — 0 violations.${NC}"
+else
+    echo -e "${RED}${BOLD}✗ Checkstyle failed.${NC} Fix violations before committing."
+    echo -e "  ${RED}Run: mvn checkstyle:check${NC}"
+    exit 1
+fi
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+echo -e "\n${YELLOW}🧪 Running tests...${NC}"
+if mvn --batch-mode --quiet test 2>&1; then
+    echo -e "${GREEN}✓ All tests passed.${NC}"
+else
+    echo -e "${RED}${BOLD}✗ Tests failed.${NC} Fix failing tests before committing."
+    echo -e "  ${RED}Run: mvn test${NC}"
+    exit 1
+fi
+
+echo -e "\n${GREEN}${BOLD}✅ All pre-commit checks passed!${NC}\n"

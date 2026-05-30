@@ -1,0 +1,66 @@
+scalar DateTime
+scalar Long
+
+type Employee {
+  id: Long!
+  employeeId: String!
+  firstName: String!
+  middleName: String
+  lastName: String!
+  gender: String
+  email: String!
+  phoneNumber: String
+  dateOfBirth: DateTime
+  nationality: String
+  jobLevel: String
+  department: String
+  location: String
+  bankAccountNumber: String
+  company: String
+  jobTitle: String
+  costCenter: String
+  startDate: DateTime
+  employeeStatus: String
+  managerId: String
+  managerEmail: String
+  lastModifiedOn: DateTime
+  lastModified: Long
+  fullName: String!
+}
+
+type Query {
+  hello: String!
+  employees(offset: Int = 0, limit: Int = 10): [Employee!]!
+  employee(id: Long!): Employee
+  searchEmployees(search: String!, offset: Int = 0, limit: Int = 10): [Employee!]!
+}
+
+type Mutation {
+  createEmployee(data: CreateEmployeeInput!): Employee!
+  updateEmployee(id: Long!, data: UpdateEmployeeInput!): Employee
+  deleteEmployee(id: Long!): Boolean!
+}
+
+type Subscription {
+  employeeCreated: Employee!
+}
+
+input CreateEmployeeInput {
+  id: Long!
+  employeeId: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  middleName: String
+  company: String
+  jobTitle: String
+}
+
+input UpdateEmployeeInput {
+  firstName: String
+  lastName: String
+  email: String
+  middleName: String
+  company: String
+  jobTitle: String
+}

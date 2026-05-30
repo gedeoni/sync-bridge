@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+    open-in-view: false
+  h2:
+    console:
+      enabled: false
+
+app:
+  auth-token: test-token
+
+# Silence noisy startup logs in tests
+logging:
+  level:
+    root: WARN
+    com.syncbridge: INFO

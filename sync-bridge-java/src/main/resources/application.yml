@@ -1,0 +1,50 @@
+server:
+  port: ${APP_PORT:3000}
+
+# # Sets the prefix for all REST controller mappings
+# spring.mvc.servlet.path=/api/v1
+
+
+spring:
+  application:
+    name: ${APP_NAME:sync-bridge-spring}
+  datasource:
+    url: jdbc:h2:mem:syncdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: true
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  graphql:
+    path: /graphql
+    websocket:
+      path: /graphql
+  mvc:
+    servlet:
+      path: /api/v1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        sync.operation.duration: true
+
+app:
+  auth-token: ${AUTHORIZATION_KEY:your-secret-auth-key}
