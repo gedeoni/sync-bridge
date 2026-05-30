@@ -1,0 +1,156 @@
+@port = 3000
+
+###
+# Health Check
+###
+GET http://localhost:{{port}}/api/v1/healthz
+
+###
+# Sync Stats (Requires Auth)
+###
+GET http://localhost:{{port}}/api/v1/sync/stats
+X-Auth-Token: your-secret-auth-key
+
+###
+# Sync Data (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "customers",
+  "data": [
+    {
+      "email": "test@example.com",
+      "first_name": "Test",
+      "last_name": "User"
+    }
+  ]
+}
+
+###
+# Get All Sync History (Requires Auth)
+###
+GET http://localhost:{{port}}/api/v1/sync-history?page=1&size=10&status=successful
+X-Auth-Token: your-secret-auth-key
+
+###
+# Get Sync History by ID (Requires Auth)
+###
+GET http://localhost:{{port}}/api/v1/sync-history/1
+X-Auth-Token: your-secret-auth-key
+
+###
+# Retry Sync History (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync-history/retry/1
+X-Auth-Token: your-secret-auth-key
+
+###
+# Delete Sync History (Requires Auth)
+###
+DELETE http://localhost:{{port}}/api/v1/sync-history/1
+X-Auth-Token: your-secret-auth-key
+
+###
+# GraphQL Requests
+###
+
+###
+# GraphQL: Hello
+###
+POST http://localhost:{{port}}/graphql
+X-Auth-Token: your-secret-auth-key
+Content-Type: application/json
+
+{
+  "query": "query { hello }"
+}
+
+###
+# GraphQL: Get Employees
+###
+POST http://localhost:{{port}}/graphql
+X-Auth-Token: your-secret-auth-key
+Content-Type: application/json
+
+{
+  "query": "query { employees(limit: 2, offset: 0) { id firstName lastName email fullName } }"
+}
+
+###
+# GraphQL: Get Employee by ID
+###
+POST http://localhost:{{port}}/graphql
+X-Auth-Token: your-secret-auth-key
+Content-Type: application/json
+
+{
+  "query": "query { employee(id: 40013) { id firstName lastName fullName email company jobTitle } }"
+}
+
+###
+# GraphQL: Search Employees
+###
+POST http://localhost:{{port}}/graphql
+X-Auth-Token: your-secret-auth-key
+Content-Type: application/json
+
+{
+  "query": "query { searchEmployees(search: \"Doe\", limit: 5) { id firstName lastName email jobTitle jobLevel } }"
+}
+
+###
+# GraphQL: Create Employee (Mutation)
+###
+POST http://localhost:{{port}}/graphql
+X-Auth-Token: your-secret-auth-key
+Content-Type: application/json
+
+{
+  "query": "mutation($data: CreateEmployeeInput!) { createEmployee(data: $data) { id firstName lastName email fullName } }",
+  "variables": {
+    "data": {
+      "employeeId": "1",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane.doe@example.com",
+      "company": "Example Co",
+      "jobTitle": "Engineer"
+    }
+  }
+}
+
+###
+# GraphQL: Update Employee (Mutation)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation($id: Int!, $data: UpdateEmployeeInput!) { updateEmployee(id: $id, data: $data) { id firstName lastName email fullName jobTitle } }",
+  "variables": {
+    "id": 1,
+    "data": {
+      "jobTitle": "Senior Engineer"
+    }
+  }
+}
+
+###
+# GraphQL: Delete Employee (Mutation)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+
+{
+  "query": "mutation($id: Int!) { deleteEmployee(id: $id) }",
+  "variables": { "id": 1 }
+}
+
+###
+# GraphQL: Subscription example (WebSocket at ws://localhost:{{port}}/graphql)
+# Run it separately: APP_PORT=3000 npx ts-node src/scripts/subscribe_employee.ts
+# Use a GraphQL client supporting subscriptions to run:
+# subscription { employeeCreated { id firstName lastName email fullName } }
