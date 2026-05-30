@@ -1,0 +1,19 @@
+# Dependency directories
+node_modules
+build/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+*.log*
+
+# Omit some scripts
+*.py
+
+# Miscellaneous
+.DS_Store
+
+# Local SQLite databases
+*.sqlite
