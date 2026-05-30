@@ -1,0 +1,101 @@
+# =============================================================================
+# Unified Monorepo .gitignore for sync-bridge
+# =============================================================================
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OS & System Files
+# ─────────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IDEs and Editors
+# ─────────────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Environment Variables, Secrets & Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example.local
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Databases & Local Runtime Stores
+# ─────────────────────────────────────────────────────────────────────────────
+*.db
+*.db*
+*.sqlite
+*.sqlite3
+sync-bridge.db*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Node.js & JavaScript (NestJS / Express)
+# ─────────────────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+out/
+.npm-cache/
+.nyc_output/
+coverage/
+.temp/
+.tmp/
+*.tmp
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Python (Django)
+# ─────────────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+ENV/
+env/
+.ruff_cache/
+.pytest_cache/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Java & Maven (Spring)
+# ─────────────────────────────────────────────────────────────────────────────
+target/
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties

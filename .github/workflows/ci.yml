@@ -1,0 +1,192 @@
+name: Consolidated Monorepo CI
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 1: Detect Changes
+  # ───────────────────────────────────────────────────────────────────────────
+  detect-changes:
+    name: Detect Changed Projects
+    runs-on: ubuntu-latest
+    outputs:
+      nestjs: ${{ steps.filter.outputs.nestjs }}
+      express: ${{ steps.filter.outputs.express }}
+      django: ${{ steps.filter.outputs.django }}
+      java: ${{ steps.filter.outputs.java }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Path Filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            nestjs:
+              - 'sync-bridge-nestjs/**'
+            express:
+              - 'sync-bridge-express/**'
+            django:
+              - 'sync-bridge-django/**'
+            java:
+              - 'sync-bridge-java/**'
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 2: NestJS CI (sync-bridge-nestjs)
+  # ───────────────────────────────────────────────────────────────────────────
+  nestjs-ci:
+    name: NestJS CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.nestjs == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-nestjs
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: sync-bridge-nestjs/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Eslint
+        run: npm run lint
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Run Unit Tests
+        run: npm run test
+
+      - name: Run E2E Tests
+        run: npm run test:e2e
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 3: Express CI (sync-bridge-express)
+  # ───────────────────────────────────────────────────────────────────────────
+  express-ci:
+    name: Express CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.express == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-express
+    env:
+      NODE_ENV: test
+      DATABASE_URI: "sqlite::memory:"
+      AUTHORIZATION_KEY: ${{ secrets.AUTHORIZATION_KEY }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (v20.18.1)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.18.1"
+          cache: "npm"
+          cache-dependency-path: sync-bridge-express/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Eslint
+        run: npm run lint
+
+      - name: Run Tests with Coverage
+        run: npm test -- --coverage
+
+      - name: Run Compile Build
+        run: npm run build
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 4: Django CI (sync-bridge-django)
+  # ───────────────────────────────────────────────────────────────────────────
+  django-ci:
+    name: Django CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.django == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-django
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python (3.12)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Dependencies
+        run: uv sync --group dev
+
+      - name: Run Ruff Lint Check
+        run: uv run ruff check .
+
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check .
+
+      - name: Run Django Tests
+        env:
+          APP_AUTH_TOKEN: "ci-secret-token"
+          SECRET_KEY: "ci-secret-key-for-testing"
+        run: uv run python manage.py test
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 5: Java CI (sync-bridge-java)
+  # ───────────────────────────────────────────────────────────────────────────
+  java-ci:
+    name: Java CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.java == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-java
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: sync-bridge-java/pom.xml
+
+      - name: Run Checkstyle
+        run: mvn --batch-mode checkstyle:check
+
+      - name: Compile (Skip Tests)
+        run: mvn --batch-mode -DskipTests compile
+
+      - name: Run Maven Tests
+        run: mvn --batch-mode test
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-java-17
+          path: sync-bridge-java/target/surefire-reports/
+          retention-days: 14
