@@ -18,6 +18,7 @@ jobs:
       express: ${{ steps.filter.outputs.express }}
       django: ${{ steps.filter.outputs.django }}
       java: ${{ steps.filter.outputs.java }}
+      rust: ${{ steps.filter.outputs.rust }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -35,6 +36,8 @@ jobs:
               - 'sync-bridge-django/**'
             java:
               - 'sync-bridge-java/**'
+            rust:
+              - 'sync-bridge-rust/**'
 
   # ───────────────────────────────────────────────────────────────────────────
   # Job 2: NestJS CI (sync-bridge-nestjs)
@@ -190,3 +193,42 @@ jobs:
           name: surefire-reports-java-17
           path: sync-bridge-java/target/surefire-reports/
           retention-days: 14
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 6: Rust CI (sync-bridge-rust)
+  # ───────────────────────────────────────────────────────────────────────────
+  rust-ci:
+    name: Rust CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.rust == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-rust
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3 libsqlite3-dev
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sync-bridge-rust -> target
+
+      - name: Run Format Check
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy Lints
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run Cargo Tests
+        run: cargo test --all-targets
