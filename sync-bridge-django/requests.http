@@ -12,7 +12,29 @@ GET http://localhost:{{port}}/api/v1/sync/stats
 X-Auth-Token: your-secret-auth-key
 
 ###
-# Sync Data (Requires Auth)
+# Sync Data - Employees (Requires Auth) 
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "employees",
+  "data": [
+    {
+      "id": "1",
+      "employeeId": "E-001",
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@example.com",
+      "company": "Example Co",
+      "jobTitle": "Lead Engineer"
+    }
+  ]
+}
+
+###
+# Sync Data - Customers (Requires Auth)
 ###
 POST http://localhost:{{port}}/api/v1/sync
 Content-Type: application/json
@@ -28,6 +50,55 @@ X-Auth-Token: your-secret-auth-key
     }
   ]
 }
+
+###
+# Sync Data - Products (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "products",
+  "data": [
+    {
+      "name": "High-Performance Compiler",
+      "description": "Compiles code at lightning speed.",
+      "price": 29999,
+      "currency": "USD",
+      "active": true,
+      "weight_grams": 0
+    }
+  ]
+}
+
+###
+# Sync Data - Orders (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "orders",
+  "data": [
+    {
+      "order_number": "ORD-12345",
+      "customer_id": 1,
+      "status": "pending",
+      "currency": "USD",
+      "amount": 29999,
+      "items": [
+        {
+          "product_id": 1,
+          "qty": 1,
+          "unit_price": 29999
+        }
+      ]
+    }
+  ]
+}
+
 
 ###
 # Get All Sync History (Requires Auth)
