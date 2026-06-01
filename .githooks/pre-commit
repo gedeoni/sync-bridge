@@ -30,7 +30,21 @@ ROOT_DIR=$(pwd)
 
 # Flag to track if checks were executed
 CHECKS_RUN=0
+# Detect affected sub-projects
+AFFECTED_PROJECTS=()
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-nestjs/'; then AFFECTED_PROJECTS+=("NestJS"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-express/'; then AFFECTED_PROJECTS+=("Express"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-django/'; then AFFECTED_PROJECTS+=("Django"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-java/'; then AFFECTED_PROJECTS+=("Java"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-rust/'; then AFFECTED_PROJECTS+=("Rust"); fi
 
+if [ ${#AFFECTED_PROJECTS[@]} -gt 0 ]; then
+    PROJECTS_LIST=$(printf ", %s" "${AFFECTED_PROJECTS[@]}")
+    PROJECTS_LIST=${PROJECTS_LIST:2}
+    echo -e "${BOLD}${CYAN}👉 Staged changes affect: ${PROJECTS_LIST}${NC}\n"
+else
+    echo -e "${BOLD}${CYAN}👉 Staged changes affect: Global configurations${NC}\n"
+fi
 # -----------------------------------------------------------------------------
 # NestJS checks (sync-bridge-nestjs)
 # -----------------------------------------------------------------------------
