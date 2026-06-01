@@ -157,6 +157,39 @@ if [ -n "$JAVA_STAGED" ]; then
 fi
 
 # -----------------------------------------------------------------------------
+# Rust checks (sync-bridge-rust)
+# -----------------------------------------------------------------------------
+RUST_STAGED=$(echo "$STAGED_FILES" | grep '^sync-bridge-rust/' || true)
+if [ -n "$RUST_STAGED" ]; then
+    NUM_RUST_FILES=$(echo "$RUST_STAGED" | wc -l | xargs)
+    echo -e "\n${BOLD}${YELLOW}🦀 Rust project changes detected ($NUM_RUST_FILES files staged)${NC}"
+    echo -e "${CYAN}Running Rust format, clippy and tests...${NC}"
+    
+    cd "$ROOT_DIR/sync-bridge-rust"
+    
+    echo -e "🧹 Running cargo fmt..."
+    if ! cargo fmt -- --check; then
+        echo -e "${RED}${BOLD}✗ Rust formatting checks failed. Run 'cargo fmt' inside sync-bridge-rust directory. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "🧹 Running cargo clippy..."
+    if ! cargo clippy -- -D warnings; then
+        echo -e "${RED}${BOLD}✗ Rust clippy checks failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "🧪 Running cargo test..."
+    if ! cargo test; then
+        echo -e "${RED}${BOLD}✗ Rust unit/integration tests failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ Rust checks passed successfully.${NC}"
+    CHECKS_RUN=$((CHECKS_RUN + 1))
+fi
+
+# -----------------------------------------------------------------------------
 # Final output
 # -----------------------------------------------------------------------------
 cd "$ROOT_DIR"

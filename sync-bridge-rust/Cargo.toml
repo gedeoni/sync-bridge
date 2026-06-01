@@ -1,0 +1,26 @@
+[package]
+name = "sync-bridge-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+axum = { version = "0.8", features = ["ws", "macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors", "request-id", "util"] }
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "sqlite", "uuid", "chrono"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-graphql = { version = "7.0", features = ["chrono", "uuid"] }
+async-graphql-axum = "7.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+prometheus = { version = "0.13", features = ["process"] }
+lazy_static = "1.4"
+regex = "1.10"
+futures-util = "0.3"
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
