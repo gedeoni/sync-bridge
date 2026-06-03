@@ -1,0 +1,476 @@
+basePath: /
+definitions:
+  dto.SyncRequest:
+    properties:
+      data:
+        items:
+          type: object
+        minItems: 1
+        type: array
+      model:
+        enum:
+        - customers
+        - products
+        - orders
+        - employees
+        type: string
+    required:
+    - data
+    - model
+    type: object
+  errors.AppError:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  handlers.GetHistoryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.SyncHistoryRow'
+      message:
+        example: Sync history retrieved successfully
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  handlers.HealthCheckData:
+    properties:
+      read:
+        example: true
+        type: boolean
+      timestamp:
+        example: "2026-06-03T07:46:58Z"
+        type: string
+      write:
+        example: true
+        type: boolean
+    type: object
+  handlers.HealthResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.HealthCheckData'
+      message:
+        example: Service is healthy
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  handlers.ListHistoryData:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/handlers.SyncHistoryRow'
+        type: array
+      empty:
+        example: false
+        type: boolean
+      first:
+        example: true
+        type: boolean
+      last:
+        example: false
+        type: boolean
+      number:
+        example: 0
+        type: integer
+      numberOfElements:
+        example: 15
+        type: integer
+      pageable:
+        $ref: '#/definitions/handlers.PageableInfo'
+      size:
+        example: 15
+        type: integer
+      totalElements:
+        example: 25
+        type: integer
+      totalPages:
+        example: 2
+        type: integer
+    type: object
+  handlers.ListHistoryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.ListHistoryData'
+      message:
+        example: Sync histories retrieved successfully
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  handlers.PageableInfo:
+    properties:
+      offset:
+        example: 0
+        type: integer
+      pageNumber:
+        example: 0
+        type: integer
+      pageSize:
+        example: 15
+        type: integer
+      paged:
+        example: true
+        type: boolean
+      sort:
+        $ref: '#/definitions/handlers.SortInfo'
+      unpaged:
+        example: false
+        type: boolean
+    type: object
+  handlers.RetryHistoryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.SyncHistoryRow'
+      message:
+        example: Sync history will be retried
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  handlers.SortInfo:
+    properties:
+      empty:
+        example: false
+        type: boolean
+      sorted:
+        example: true
+        type: boolean
+      unsorted:
+        example: false
+        type: boolean
+    type: object
+  handlers.StatsData:
+    properties:
+      failed:
+        example: 2
+        type: integer
+      invalid:
+        example: 0
+        type: integer
+      pending_retry:
+        example: 1
+        type: integer
+      successful:
+        example: 10
+        type: integer
+      total:
+        example: 13
+        type: integer
+    type: object
+  handlers.StatsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.StatsData'
+      message:
+        example: Stats retrieved successfully
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  handlers.SyncHistoryRow:
+    properties:
+      createdAt:
+        example: "2026-06-03T07:46:58.000Z"
+        type: string
+      failureReason:
+        example: 'Duplicate entry: field ''EMAIL'' already exists'
+        type: string
+      id:
+        example: 1
+        type: integer
+      payload:
+        example: '[{"email":"john.doe@example.com"}]'
+        type: string
+      retries:
+        example: 0
+        type: integer
+      status:
+        example: FAILED
+        type: string
+      updatedAt:
+        example: "2026-06-03T07:46:58.000Z"
+        type: string
+    type: object
+  handlers.SyncResponse:
+    properties:
+      data:
+        $ref: '#/definitions/handlers.SyncResponseData'
+      message:
+        example: Sync completed successfully
+        type: string
+      status:
+        example: 200
+        type: integer
+    type: object
+  handlers.SyncResponseData:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/handlers.SyncResult'
+        type: array
+    type: object
+  handlers.SyncResult:
+    properties:
+      id:
+        example: 101
+        type: integer
+      status:
+        example: created
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: Transactional data synchronization API for SQLite target databases.
+  title: Sync Bridge Go API
+  version: "1.0"
+paths:
+  /api/v1/healthz:
+    get:
+      description: Verifies basic server operation and database read/write capabilities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: System health check
+      tags:
+      - system
+  /api/v1/sync:
+    post:
+      consumes:
+      - application/json
+      description: Syncs data payload items (customers, products, orders, employees)
+        transactionally. If one fails, the target database modifications roll back,
+        but the execution log is committed to sync_history with 'FAILED' status.
+      parameters:
+      - description: Data Payload to synchronize
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SyncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.SyncResponse'
+        "400":
+          description: Validation failed or invalid JSON
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "401":
+          description: Access Denied
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "409":
+          description: Data Integrity Violation (Conflict)
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - ApiKeyAuth: []
+      summary: Synchronize data payload
+      tags:
+      - sync
+  /api/v1/sync-history:
+    get:
+      description: Retrieves a paginated list of sync history logs, optionally filtered
+        by status.
+      parameters:
+      - default: 1
+        description: Page number (1-based)
+        in: query
+        name: page
+        type: integer
+      - default: 15
+        description: Page size
+        in: query
+        name: size
+        type: integer
+      - description: Filter by status (SUCCESSFUL, FAILED, PENDING_RETRY, INVALID)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListHistoryResponse'
+        "401":
+          description: Access Denied
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - ApiKeyAuth: []
+      summary: List sync history
+      tags:
+      - history
+  /api/v1/sync-history/{id}:
+    delete:
+      description: Deletes a sync history log entry from the database by its ID.
+      parameters:
+      - description: Sync History ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid sync history ID
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "401":
+          description: Access Denied
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "404":
+          description: Sync history not found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete sync history
+      tags:
+      - history
+    get:
+      description: Fetches a single sync history record by its database ID.
+      parameters:
+      - description: Sync History ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GetHistoryResponse'
+        "400":
+          description: Invalid sync history ID
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "401":
+          description: Access Denied
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "404":
+          description: Sync history not found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get sync history details
+      tags:
+      - history
+  /api/v1/sync-history/retry/{id}:
+    post:
+      description: Triggers a retry operation on a failed sync history by resetting
+        its status to PENDING_RETRY.
+      parameters:
+      - description: Sync History ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RetryHistoryResponse'
+        "400":
+          description: Invalid sync history ID or only failed syncs can be retried
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "401":
+          description: Access Denied
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "404":
+          description: Sync history not found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - ApiKeyAuth: []
+      summary: Retry failed sync history
+      tags:
+      - history
+  /api/v1/sync/stats:
+    get:
+      description: Emits aggregated counts of sync histories grouped by status type
+        (SUCCESSFUL, FAILED, PENDING_RETRY, INVALID)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.StatsResponse'
+        "401":
+          description: Access Denied
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get sync statistics
+      tags:
+      - history
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: x-auth-token
+    type: apiKey
+swagger: "2.0"

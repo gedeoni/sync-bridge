@@ -1,0 +1,229 @@
+@port = 3000
+
+###
+# Health Check (Public)
+###
+GET http://localhost:{{port}}/api/v1/healthz
+
+###
+# Prometheus Metrics Endpoint (Public)
+###
+GET http://localhost:{{port}}/metrics
+
+###
+# Actuator Prometheus Metrics Endpoint (Alternative) (Public)
+###
+GET http://localhost:{{port}}/actuator/prometheus
+
+###
+# Sync Stats (Requires Auth)
+###
+GET http://localhost:{{port}}/api/v1/sync/stats
+X-Auth-Token: your-secret-auth-key
+
+###
+# Sync Data - Employees (Requires Auth) 
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "employees",
+  "data": [
+    {
+      "id": "31637",
+      "employeeId": "E-31637",
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@example.com",
+      "company": "Example Co",
+      "jobTitle": "Lead Engineer"
+    }
+  ]
+}
+
+###
+# Sync Data - Customers (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "customers",
+  "data": [
+    {
+      "email": "test@example.com",
+      "first_name": "Test",
+      "last_name": "User"
+    }
+  ]
+}
+
+###
+# Sync Data - Products (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "products",
+  "data": [
+    {
+      "name": "High-Performance Compiler",
+      "description": "Compiles code at lightning speed.",
+      "price": 29999,
+      "currency": "USD",
+      "active": true,
+      "weight_grams": 0
+    }
+  ]
+}
+
+###
+# Sync Data - Orders (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "model": "orders",
+  "data": [
+    {
+      "order_number": "ORD-12345",
+      "customer_id": 1,
+      "status": "pending",
+      "currency": "USD",
+      "amount": 29999,
+      "items": [
+        {
+          "product_id": 1,
+          "qty": 1,
+          "unit_price": 29999
+        }
+      ]
+    }
+  ]
+}
+
+###
+# Get All Sync History (Requires Auth)
+###
+GET http://localhost:{{port}}/api/v1/sync-history?page=1&size=10&status=successful
+X-Auth-Token: your-secret-auth-key
+
+###
+# Get Sync History by ID (Requires Auth)
+###
+GET http://localhost:{{port}}/api/v1/sync-history/1
+X-Auth-Token: your-secret-auth-key
+
+###
+# Retry Sync History (Requires Auth)
+###
+POST http://localhost:{{port}}/api/v1/sync-history/retry/1
+X-Auth-Token: your-secret-auth-key
+
+###
+# Delete Sync History (Requires Auth)
+###
+DELETE http://localhost:{{port}}/api/v1/sync-history/1
+X-Auth-Token: your-secret-auth-key
+
+###
+# GraphQL Requests
+###
+
+###
+# GraphQL: Hello (Public)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query { hello }"
+}
+
+###
+# GraphQL: Get Employees (Public)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query { employees(limit: 2, offset: 0) { id firstName lastName email fullName } }"
+}
+
+###
+# GraphQL: Get Employee by ID (Public)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query { employee(id: 31637) { id firstName lastName fullName email company jobTitle } }"
+}
+
+###
+# GraphQL: Search Employees (Public)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query { searchEmployees(search: \"John\", limit: 5) { id firstName lastName email jobTitle } }"
+}
+
+###
+# GraphQL: Create Employee (Mutation) (Requires Auth)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "query": "mutation($data: CreateEmployeeInput!) { createEmployee(data: $data) { id firstName lastName email fullName } }",
+  "variables": {
+    "data": {
+      "id": 98765,
+      "employeeId": "E-98765",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane.doe@example.com",
+      "company": "Example Co",
+      "jobTitle": "Engineer"
+    }
+  }
+}
+
+###
+# GraphQL: Update Employee (Mutation) (Requires Auth)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "query": "mutation($id: Long!, $data: UpdateEmployeeInput!) { updateEmployee(id: $id, data: $data) { id firstName lastName email fullName jobTitle } }",
+  "variables": {
+    "id": 98765,
+    "data": {
+      "jobTitle": "Senior Engineer"
+    }
+  }
+}
+
+###
+# GraphQL: Delete Employee (Mutation) (Requires Auth)
+###
+POST http://localhost:{{port}}/graphql
+Content-Type: application/json
+X-Auth-Token: your-secret-auth-key
+
+{
+  "query": "mutation($id: Long!) { deleteEmployee(id: $id) }",
+  "variables": { "id": 98765 }
+}
