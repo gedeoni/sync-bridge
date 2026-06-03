@@ -5,7 +5,7 @@
 [![GraphQL](https://img.shields.io/badge/graphql-async--graphql%207.0-pink.svg?style=for-the-badge&logo=graphql)](https://async-graphql.github.io/)
 [![Database](https://img.shields.io/badge/database-SQLite%20(SQLx)-blue.svg?style=for-the-badge&logo=sqlite)](https://github.com/launchbadge/sqlx)
 
-A high-performance, asynchronous, secure, and ultra-scalable Rust port of the **Sync Bridge** API. This service mirrors the synchronization logic of the original Java Spring Boot implementation, optimizing CPU utilization, memory footprint, and transaction safety through Rust's compile-time guarantees.
+A high-performance, asynchronous, secure, and ultra-scalable Rust port of the **Sync Bridge** API.
 
 ---
 

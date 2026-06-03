@@ -13,6 +13,7 @@ Rather than maintaining setup instructions in a single monolithic document, each
 - **⚡ [Express Service](sync-bridge-express/README.md)** (`sync-bridge-express`): Backend exporter service built on Express, Sequelize, and Apollo Server.
 - **🐍 [Django Service](sync-bridge-django/README.md)** (`sync-bridge-django`): Service built on Django, Rest Framework, Strawberry GraphQL, and Python-UV.
 - **🦀 [Rust Axum Service](sync-bridge-rust/README.md)** (`sync-bridge-rust`): High-performance synchronization service built using Axum, SQLx (SQLite), and async-graphql.
+- **🦙 [Go Fiber Service](sync-bridge-go/README.md)** (`sync-bridge-go`): High-performance synchronization service built using Go, Fiber, GraphQL, and SQLite.
 
 ---
 
