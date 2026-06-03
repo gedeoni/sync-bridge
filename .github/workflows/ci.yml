@@ -19,6 +19,7 @@ jobs:
       django: ${{ steps.filter.outputs.django }}
       java: ${{ steps.filter.outputs.java }}
       rust: ${{ steps.filter.outputs.rust }}
+      go: ${{ steps.filter.outputs.go }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,6 +39,8 @@ jobs:
               - 'sync-bridge-java/**'
             rust:
               - 'sync-bridge-rust/**'
+            go:
+              - 'sync-bridge-go/**'
 
   # ───────────────────────────────────────────────────────────────────────────
   # Job 2: NestJS CI (sync-bridge-nestjs)
@@ -232,3 +235,35 @@ jobs:
 
       - name: Run Cargo Tests
         run: cargo test --all-targets
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 7: Go CI (sync-bridge-go)
+  # ───────────────────────────────────────────────────────────────────────────
+  go-ci:
+    name: Go CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.go == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-go
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go (v1.26)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+          cache-dependency-path: sync-bridge-go/go.sum
+
+      - name: Verify formatting
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go files not formatted correctly. Run go fmt."
+            gofmt -d .
+            exit 1
+          fi
+
+      - name: Run tests
+        run: go test -v ./...

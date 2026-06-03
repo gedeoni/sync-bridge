@@ -37,6 +37,7 @@ if echo "$STAGED_FILES" | grep -q '^sync-bridge-express/'; then AFFECTED_PROJECT
 if echo "$STAGED_FILES" | grep -q '^sync-bridge-django/'; then AFFECTED_PROJECTS+=("Django"); fi
 if echo "$STAGED_FILES" | grep -q '^sync-bridge-java/'; then AFFECTED_PROJECTS+=("Java"); fi
 if echo "$STAGED_FILES" | grep -q '^sync-bridge-rust/'; then AFFECTED_PROJECTS+=("Rust"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-go/'; then AFFECTED_PROJECTS+=("Go"); fi
 
 if [ ${#AFFECTED_PROJECTS[@]} -gt 0 ]; then
     PROJECTS_LIST=$(printf ", %s" "${AFFECTED_PROJECTS[@]}")
@@ -45,6 +46,7 @@ if [ ${#AFFECTED_PROJECTS[@]} -gt 0 ]; then
 else
     echo -e "${BOLD}${CYAN}👉 Staged changes affect: Global configurations${NC}\n"
 fi
+
 # -----------------------------------------------------------------------------
 # NestJS checks (sync-bridge-nestjs)
 # -----------------------------------------------------------------------------
@@ -200,6 +202,36 @@ if [ -n "$RUST_STAGED" ]; then
     fi
     
     echo -e "${GREEN}✓ Rust checks passed successfully.${NC}"
+    CHECKS_RUN=$((CHECKS_RUN + 1))
+fi
+
+# -----------------------------------------------------------------------------
+# Go checks (sync-bridge-go)
+# -----------------------------------------------------------------------------
+GO_STAGED=$(echo "$STAGED_FILES" | grep '^sync-bridge-go/' || true)
+if [ -n "$GO_STAGED" ]; then
+    NUM_GO_FILES=$(echo "$GO_STAGED" | wc -l | xargs)
+    echo -e "\n${BOLD}${YELLOW}🐹 Go project changes detected ($NUM_GO_FILES files staged)${NC}"
+    echo -e "${CYAN}Running Go fmt and tests...${NC}"
+    
+    cd "$ROOT_DIR/sync-bridge-go"
+    
+    echo -e "🧹 Running go fmt..."
+    # Format check: if gofmt -l reports any files, fail
+    UNFORMATTED_FILES=$(gofmt -l .)
+    if [ -n "$UNFORMATTED_FILES" ]; then
+        echo -e "${RED}${BOLD}✗ Go files are not formatted correctly. Run 'go fmt ./...' inside sync-bridge-go. Aborting commit.${NC}"
+        echo "$UNFORMATTED_FILES"
+        exit 1
+    fi
+    
+    echo -e "🧪 Running go test..."
+    if ! go test ./...; then
+        echo -e "${RED}${BOLD}✗ Go tests failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ Go checks passed successfully.${NC}"
     CHECKS_RUN=$((CHECKS_RUN + 1))
 fi
 
