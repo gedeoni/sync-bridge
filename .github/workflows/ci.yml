@@ -307,7 +307,7 @@ jobs:
           enable-cache: true
 
       - name: Install Dependencies
-        run: uv pip install -r requirements.txt
+        run: uv sync
 
       - name: Run Ruff Lint Check
         run: uv run ruff check .
