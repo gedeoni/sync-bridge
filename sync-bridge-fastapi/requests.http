@@ -1,0 +1,81 @@
+### Variables
+@host = http://localhost:3000
+@authToken = your-secret-auth-key
+
+### 1. Healthcheck (Public)
+GET {{host}}/api/v1/healthz
+Accept: application/json
+
+###
+
+### 2. Get Sync Stats (Authenticated)
+GET {{host}}/api/v1/sync/stats
+X-Auth-Token: {{authToken}}
+Accept: application/json
+
+###
+
+### 3. Get Sync History (Authenticated)
+GET {{host}}/api/v1/sync-history?page=1&size=15
+X-Auth-Token: {{authToken}}
+Accept: application/json
+
+###
+
+### 4. Post Customer Sync - Insert (Authenticated)
+POST {{host}}/api/v1/sync
+X-Auth-Token: {{authToken}}
+Content-Type: application/json
+
+{
+  "model": "customers",
+  "data": [
+    {
+      "email": "jane.doe@example.com",
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "default_currency": "USD"
+    }
+  ]
+}
+
+###
+
+### 5. Post Customer Sync - Upsert/Update (Authenticated)
+POST {{host}}/api/v1/sync
+X-Auth-Token: {{authToken}}
+Content-Type: application/json
+
+{
+  "model": "customers",
+  "data": [
+    {
+      "id": 1,
+      "email": "jane.doe@example.com",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "default_currency": "EUR"
+    }
+  ]
+}
+
+###
+
+### 6. GraphQL Query - Search Employees (Public Query)
+POST {{host}}/graphql
+Content-Type: application/json
+
+{
+  "query": "query { search_employees(search: \"\", limit: 5) { id employeeId firstName lastName email full_name } }"
+}
+
+###
+
+### 7. GraphQL Mutation - Create Employee (Authenticated Mutation)
+POST {{host}}/graphql
+X-Auth-Token: {{authToken}}
+Content-Type: application/json
+
+{
+  "query": "mutation { create_employee(data: { id: 100, employeeId: \"EMP100\", firstName: \"John\", lastName: \"Doe\", email: \"john.doe@example.com\" }) { id employeeId firstName lastName full_name } }"
+}
