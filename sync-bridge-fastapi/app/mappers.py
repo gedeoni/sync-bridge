@@ -1,6 +1,6 @@
+from app.dtos import CustomerDto, EmployeeDto, OrderDto, ProductDto
 from app.exceptions import ApiException
 from app.models import Customer, Employee, Order, OrderItem, Product
-from app.schemas import CustomerDto, EmployeeDto, OrderDto, ProductDto
 
 
 def map_customer(d: CustomerDto) -> Customer:

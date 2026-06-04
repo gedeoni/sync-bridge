@@ -20,6 +20,8 @@ jobs:
       java: ${{ steps.filter.outputs.java }}
       rust: ${{ steps.filter.outputs.rust }}
       go: ${{ steps.filter.outputs.go }}
+      fastapi: ${{ steps.filter.outputs.fastapi }}
+      csharp: ${{ steps.filter.outputs.csharp }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -41,6 +43,10 @@ jobs:
               - 'sync-bridge-rust/**'
             go:
               - 'sync-bridge-go/**'
+            fastapi:
+              - 'sync-bridge-fastapi/**'
+            csharp:
+              - 'sync-bridge-csharp/**'
 
   # ───────────────────────────────────────────────────────────────────────────
   # Job 2: NestJS CI (sync-bridge-nestjs)
@@ -74,7 +80,7 @@ jobs:
         run: npm run build
 
       - name: Run Unit Tests
-        run: npm run test
+        run: npm run test:cov
 
       - name: Run E2E Tests
         run: npm run test:e2e
@@ -155,7 +161,9 @@ jobs:
         env:
           APP_AUTH_TOKEN: "ci-secret-token"
           SECRET_KEY: "ci-secret-key-for-testing"
-        run: uv run python manage.py test
+        run: |
+          uv run coverage run manage.py test
+          uv run coverage json -o coverage.json
 
   # ───────────────────────────────────────────────────────────────────────────
   # Job 5: Java CI (sync-bridge-java)
@@ -233,8 +241,13 @@ jobs:
       - name: Run Clippy Lints
         run: cargo clippy --all-targets -- -D warnings
 
-      - name: Run Cargo Tests
-        run: cargo test --all-targets
+      - name: Install cargo-tarpaulin
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
+
+      - name: Run Cargo Tests with Coverage
+        run: cargo tarpaulin --all-targets --out Json --output-dir .
 
   # ───────────────────────────────────────────────────────────────────────────
   # Job 7: Go CI (sync-bridge-go)
@@ -266,4 +279,73 @@ jobs:
           fi
 
       - name: Run tests
-        run: go test -v ./...
+        run: go test -v -coverprofile=coverage.out ./...
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 8: FastAPI CI (sync-bridge-fastapi)
+  # ───────────────────────────────────────────────────────────────────────────
+  fastapi-ci:
+    name: FastAPI CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.fastapi == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-fastapi
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python (3.13)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Dependencies
+        run: uv pip install -r requirements.txt
+
+      - name: Run Ruff Lint Check
+        run: uv run ruff check .
+
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check .
+
+      - name: Run Pytest Tests
+        run: uv run pytest --cov=. --cov-report=json
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 9: C# CI (sync-bridge-csharp)
+  # ───────────────────────────────────────────────────────────────────────────
+  csharp-ci:
+    name: C# CI
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.csharp == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-bridge-csharp
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK (8.0.x)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Run formatting check
+        run: dotnet format --verify-no-changes
+
+      - name: Build project
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run unit/integration tests
+        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"

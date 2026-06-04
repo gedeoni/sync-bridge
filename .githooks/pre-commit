@@ -38,6 +38,8 @@ if echo "$STAGED_FILES" | grep -q '^sync-bridge-django/'; then AFFECTED_PROJECTS
 if echo "$STAGED_FILES" | grep -q '^sync-bridge-java/'; then AFFECTED_PROJECTS+=("Java"); fi
 if echo "$STAGED_FILES" | grep -q '^sync-bridge-rust/'; then AFFECTED_PROJECTS+=("Rust"); fi
 if echo "$STAGED_FILES" | grep -q '^sync-bridge-go/'; then AFFECTED_PROJECTS+=("Go"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-fastapi/'; then AFFECTED_PROJECTS+=("FastAPI"); fi
+if echo "$STAGED_FILES" | grep -q '^sync-bridge-csharp/'; then AFFECTED_PROJECTS+=("C#"); fi
 
 if [ ${#AFFECTED_PROJECTS[@]} -gt 0 ]; then
     PROJECTS_LIST=$(printf ", %s" "${AFFECTED_PROJECTS[@]}")
@@ -64,8 +66,8 @@ if [ -n "$NESTJS_STAGED" ]; then
         exit 1
     fi
     
-    echo -e "🧪 Running unit tests..."
-    if ! npm run test; then
+    echo -e "🧪 Running unit tests with coverage..."
+    if ! npm run test:cov; then
         echo -e "${RED}${BOLD}✗ NestJS unit tests failed. Aborting commit.${NC}"
         exit 1
     fi
@@ -103,6 +105,12 @@ if [ -n "$EXPRESS_STAGED" ]; then
         exit 1
     fi
     
+    echo -e "🧪 Running unit tests with coverage..."
+    if ! npm test -- --coverage; then
+        echo -e "${RED}${BOLD}✗ Express unit tests failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
     echo -e "${GREEN}✓ Express checks passed successfully.${NC}"
     CHECKS_RUN=$((CHECKS_RUN + 1))
 fi
@@ -133,15 +141,59 @@ if [ -n "$DJANGO_PY_STAGED" ]; then
         exit 1
     fi
     
-    echo -e "🧪 Running Django unit tests..."
+    echo -e "🧪 Running Django unit tests with coverage..."
     export APP_AUTH_TOKEN='pre-commit-secret-token'
     export SECRET_KEY='pre-commit-secret-key-for-testing'
-    if ! uv run python manage.py test; then
+    if ! uv run coverage run manage.py test; then
         echo -e "${RED}${BOLD}✗ Django unit tests failed. Aborting commit.${NC}"
         exit 1
     fi
+    uv run coverage json -o coverage.json
     
     echo -e "${GREEN}✓ Django checks passed successfully.${NC}"
+    CHECKS_RUN=$((CHECKS_RUN + 1))
+fi
+
+# -----------------------------------------------------------------------------
+# FastAPI checks (sync-bridge-fastapi)
+# -----------------------------------------------------------------------------
+FASTAPI_STAGED=$(echo "$STAGED_FILES" | grep '^sync-bridge-fastapi/' || true)
+if [ -n "$FASTAPI_STAGED" ]; then
+    NUM_FASTAPI_FILES=$(echo "$FASTAPI_STAGED" | wc -l | xargs)
+    echo -e "\n${BOLD}${YELLOW}🐍 FastAPI project changes detected ($NUM_FASTAPI_FILES files staged)${NC}"
+    echo -e "${CYAN}Running FastAPI linters and tests...${NC}"
+    
+    cd "$ROOT_DIR/sync-bridge-fastapi"
+    
+    # Check if virtualenv is present, if not warn/setup
+    if [ ! -d ".venv" ]; then
+        echo -e "${YELLOW}Virtual environment .venv not found. Running uv venv...${NC}"
+        uv venv --quiet
+        source .venv/bin/activate
+        uv pip install -r requirements.txt --quiet
+    else
+        source .venv/bin/activate
+    fi
+
+    echo -e "🧹 Running Ruff lint checks..."
+    if ! ruff check .; then
+        echo -e "${RED}${BOLD}✗ FastAPI Ruff lint checks failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "🧹 Running Ruff formatting checks..."
+    if ! ruff format --check .; then
+        echo -e "${RED}${BOLD}✗ FastAPI Ruff formatting check failed. Run 'ruff format .' inside sync-bridge-fastapi directory. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "🧪 Running FastAPI unit/integration tests with coverage..."
+    if ! PYTHONPATH=. pytest --cov=. --cov-report=json; then
+        echo -e "${RED}${BOLD}✗ FastAPI unit tests failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ FastAPI checks passed successfully.${NC}"
     CHECKS_RUN=$((CHECKS_RUN + 1))
 fi
 
@@ -195,10 +247,18 @@ if [ -n "$RUST_STAGED" ]; then
         exit 1
     fi
     
-    echo -e "🧪 Running cargo test..."
-    if ! cargo test; then
-        echo -e "${RED}${BOLD}✗ Rust unit/integration tests failed. Aborting commit.${NC}"
-        exit 1
+    if command -v cargo-tarpaulin &> /dev/null; then
+        echo -e "🧪 Running Rust unit/integration tests with coverage..."
+        if ! cargo tarpaulin --all-targets --out Json --output-dir .; then
+            echo -e "${RED}${BOLD}✗ Rust tests failed. Aborting commit.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "🧪 Running cargo test..."
+        if ! cargo test; then
+            echo -e "${RED}${BOLD}✗ Rust unit/integration tests failed. Aborting commit.${NC}"
+            exit 1
+        fi
     fi
     
     echo -e "${GREEN}✓ Rust checks passed successfully.${NC}"
@@ -225,8 +285,8 @@ if [ -n "$GO_STAGED" ]; then
         exit 1
     fi
     
-    echo -e "🧪 Running go test..."
-    if ! go test ./...; then
+    echo -e "🧪 Running go test with coverage..."
+    if ! go test -coverprofile=coverage.out ./...; then
         echo -e "${RED}${BOLD}✗ Go tests failed. Aborting commit.${NC}"
         exit 1
     fi
@@ -236,12 +296,47 @@ if [ -n "$GO_STAGED" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# Final output
+# C# checks (sync-bridge-csharp)
+# -----------------------------------------------------------------------------
+CSHARP_STAGED=$(echo "$STAGED_FILES" | grep '^sync-bridge-csharp/' || true)
+if [ -n "$CSHARP_STAGED" ]; then
+    NUM_CSHARP_FILES=$(echo "$CSHARP_STAGED" | wc -l | xargs)
+    echo -e "\n${BOLD}${YELLOW}🎯 C# project changes detected ($NUM_CSHARP_FILES files staged)${NC}"
+    echo -e "${CYAN}Running C# formatting checks and tests...${NC}"
+    
+    cd "$ROOT_DIR/sync-bridge-csharp"
+    
+    echo -e "🧹 Running dotnet format check..."
+    if ! dotnet format --verify-no-changes; then
+        echo -e "${RED}${BOLD}✗ C# files are not formatted correctly. Run 'dotnet format' inside sync-bridge-csharp. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "🧪 Running dotnet tests with coverage..."
+    if ! dotnet test --collect:"XPlat Code Coverage"; then
+        echo -e "${RED}${BOLD}✗ C# tests failed. Aborting commit.${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ C# checks passed successfully.${NC}"
+    CHECKS_RUN=$((CHECKS_RUN + 1))
+fi
+
+# -----------------------------------------------------------------------------
+# Final output & Update README coverage
 # -----------------------------------------------------------------------------
 cd "$ROOT_DIR"
 if [ "$CHECKS_RUN" -eq 0 ]; then
     echo -e "\n${GREEN}✓ Staged changes are outside monitored project folders or do not require code checks. Proceeding with commit.${NC}"
 else
+    echo -e "\n${BOLD}${CYAN}📊 Updating README.md coverage badges...${NC}"
+    if node scripts/update-readme-coverage.js; then
+        # If README.md was modified, stage it automatically
+        git add README.md
+        echo -e "${GREEN}✓ README.md coverage badges updated and staged.${NC}"
+    else
+        echo -e "${YELLOW}⚠ Failed to update README.md coverage badges automatically.${NC}"
+    fi
     echo -e "\n${BOLD}${GREEN}✅ All unified pre-commit checks passed successfully! Proceeding with commit.${NC}"
 fi
 

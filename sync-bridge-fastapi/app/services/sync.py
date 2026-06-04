@@ -4,10 +4,10 @@ from typing import Any, Dict, List
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.dtos import CustomerDto, EmployeeDto, OrderDto, ProductDto
 from app.exceptions import ApiException
 from app.mappers import map_customer, map_employee, map_order, map_product
 from app.models import SyncHistory
-from app.schemas import CustomerDto, EmployeeDto, OrderDto, ProductDto
 
 from .sync_history import SyncHistoryService
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.schemas import SyncRequest
+from app.dtos import SyncRequest
 from app.services import SyncService
 
 router = APIRouter()

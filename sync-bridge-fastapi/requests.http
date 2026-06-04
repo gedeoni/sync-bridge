@@ -61,7 +61,78 @@ Content-Type: application/json
 
 ###
 
-### 6. GraphQL Query - Search Employees (Public Query)
+### 6. Post Product Sync (Authenticated)
+POST {{host}}/api/v1/sync
+X-Auth-Token: {{authToken}}
+Content-Type: application/json
+
+{
+  "model": "products",
+  "data": [
+    {
+      "name": "Wireless Mouse",
+      "description": "Ergonomic 2.4GHz wireless mouse",
+      "price": 2500,
+      "currency": "USD",
+      "active": true,
+      "weight_grams": 150
+    }
+  ]
+}
+
+###
+
+### 7. Post Order Sync (Authenticated)
+POST {{host}}/api/v1/sync
+X-Auth-Token: {{authToken}}
+Content-Type: application/json
+
+{
+  "model": "orders",
+  "data": [
+    {
+      "order_number": "ORD-2026-0001",
+      "customer_id": 1,
+      "status": "pending",
+      "currency": "USD",
+      "amount": 5000,
+      "items": [
+        {
+          "product_id": 1,
+          "qty": 2,
+          "unit_price": 2500
+        }
+      ]
+    }
+  ]
+}
+
+###
+
+### 8. Post Employee Sync (Authenticated)
+POST {{host}}/api/v1/sync
+X-Auth-Token: {{authToken}}
+Content-Type: application/json
+
+{
+  "model": "employees",
+  "data": [
+    {
+      "id": "101",
+      "employeeId": "EMP101",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "company": "Sync Bridge Corp",
+      "jobTitle": "Software Engineer",
+      "department": "Engineering"
+    }
+  ]
+}
+
+###
+
+### 9. GraphQL Query - Search Employees (Public Query)
 POST {{host}}/graphql
 Content-Type: application/json
 
@@ -71,7 +142,7 @@ Content-Type: application/json
 
 ###
 
-### 7. GraphQL Mutation - Create Employee (Authenticated Mutation)
+### 10. GraphQL Mutation - Create Employee (Authenticated Mutation)
 POST {{host}}/graphql
 X-Auth-Token: {{authToken}}
 Content-Type: application/json
