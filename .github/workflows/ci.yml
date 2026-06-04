@@ -316,7 +316,7 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Run Pytest Tests
-        run: uv run pytest --cov=. --cov-report=json
+        run: PYTHONPATH=. uv run pytest --cov=. --cov-report=json
 
   # ───────────────────────────────────────────────────────────────────────────
   # Job 9: C# CI (sync-bridge-csharp)
