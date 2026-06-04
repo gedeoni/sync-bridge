@@ -72,6 +72,11 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "lcov"
+    ],
     "testEnvironment": "node"
   },
   "lint-staged": {

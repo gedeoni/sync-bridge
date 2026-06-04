@@ -30,6 +30,7 @@ The service is configured via configuration files or environment variables:
 # Define application port (defaults to 3000)
 export PORT=3000
 
+
 # Secret authorization key used to guard write endpoints
 export AUTHORIZATION_KEY="your-secret-auth-key"
 

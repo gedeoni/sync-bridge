@@ -7,4 +7,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   roots: ['<rootDir>/src'],
   setupFiles: ['<rootDir>/jest.setup.js'],
+  coverageReporters: ['json-summary', 'text', 'lcov', 'clover'],
 };

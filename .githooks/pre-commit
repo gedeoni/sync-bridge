@@ -286,7 +286,7 @@ if [ -n "$GO_STAGED" ]; then
     fi
     
     echo -e "🧪 Running go test with coverage..."
-    if ! go test -coverprofile=coverage.out ./...; then
+    if ! go test -coverprofile=coverage.out -coverpkg=./... ./...; then
         echo -e "${RED}${BOLD}✗ Go tests failed. Aborting commit.${NC}"
         exit 1
     fi
