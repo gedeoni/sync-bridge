@@ -15,7 +15,7 @@ Rather than maintaining setup instructions in a single monolithic document, each
 - **🦀 [Rust Axum Service](sync-bridge-rust/README.md)** (`sync-bridge-rust`): <!-- cov:rust -->![Coverage](https://img.shields.io/badge/Coverage-pending-lightgrey)<!-- cov:rust-end --> High-performance synchronization service built using Axum, SQLx (SQLite), and async-graphql.
 - **🦙 [Go Fiber Service](sync-bridge-go/README.md)** (`sync-bridge-go`): <!-- cov:go -->![Coverage](https://img.shields.io/badge/Coverage-pending-lightgrey)<!-- cov:go-end --> High-performance synchronization service built using Go, Fiber, GraphQL, and SQLite.
 - **🐍 [FastAPI Service](sync-bridge-fastapi/README.md)** (`sync-bridge-fastapi`): <!-- cov:fastapi -->![Coverage](https://img.shields.io/badge/fastapi-78%25-green)<!-- cov:fastapi-end --> High-performance API built using Python's FastAPI, SQLAlchemy (AioSQLite), and Strawberry GraphQL.
-- **🎯 [C# Service](sync-bridge-csharp/README.md)** (`sync-bridge-csharp`): <!-- cov:csharp -->![Coverage](https://img.shields.io/badge/Coverage-pending-lightgrey)<!-- cov:csharp-end --> C# .NET Core implementation of the Sync Bridge API.
+- **🎯 [C# Service](sync-bridge-csharp/README.md)** (`sync-bridge-csharp`): <!-- cov:csharp -->![Coverage](https://img.shields.io/badge/csharp-67%25-yellow)<!-- cov:csharp-end --> C# .NET Core implementation of the Sync Bridge API.
 
 ---
 
