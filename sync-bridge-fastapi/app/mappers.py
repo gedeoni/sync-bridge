@@ -54,7 +54,7 @@ def map_order(d: OrderDto) -> Order:
             o.amount = d.amount
     else:
         if d.amount is None:
-            raise ApiException(400, "Order must include items or an amount")
+            raise ApiException(400, "An order must include items or an amount")
         o.amount = d.amount
 
     if d.items:
