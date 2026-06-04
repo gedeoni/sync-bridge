@@ -135,6 +135,21 @@ This decoupled architecture strictly satisfies the **Open-Closed Principle (OCP)
 
 ---
 
+## Environment Configuration
+
+The service is configured via configuration files or environment variables:
+
+```bash
+# Define application port (defaults to 3000)
+export PORT=3000
+
+# Secret authorization key used to guard write endpoints
+export AUTHORIZATION_KEY="your-secret-auth-key"
+
+# Path to SQLite database (defaults to local file)
+export DATABASE_URL="Data Source=sync-bridge.db"
+```
+
 ## Project Directory Structure
 
 ```text
